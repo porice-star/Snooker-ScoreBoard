@@ -54,7 +54,7 @@
             position: absolute;
             top: 5px;
             right: 10px;
-            font-size: 7.2vmin; /* ✅ ใหญ่ขึ้นอีก 20% */
+            font-size: 7.2vmin;
             color: gold;
             font-weight: bold;
             cursor: text;
@@ -84,7 +84,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        /* ✅ ปุ่มพื้นฐาน */
+        /* ปุ่มพื้นฐาน */
         .snooker-ball, .action-button, .sign-button {
             width: 60px;
             height: 60px;
@@ -104,13 +104,13 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.6);
         }
 
-        /* ✅ ผู้เล่นสีต่างกัน */
+        /* ผู้เล่นสีต่างกัน */
         #playerA { background-color: #024731; }
         #playerB { background-color: #1b3a6f; }
         #playerC { background-color: #5c2751; }
         #playerD { background-color: #7a3b00; }
 
-        /* ✅ ลูกสนุ้กเป็นลูกบอลกลมมีเงา */
+        /* ลูกสนุ้กเป็นลูกบอลกลมมีเงา */
         .snooker-ball {
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(0,0,0,0.6));
@@ -125,7 +125,7 @@
         .black { background: radial-gradient(circle at 30% 30%, #666666, #000000); color: white; }
         .gold { background: radial-gradient(circle at 30% 30%, #fff5b3, #b38f00); color: black; }
 
-        /* ✅ ปุ่มการทำงาน */
+        /* ปุ่มการทำงาน */
         .action-button.setzero {
             background: linear-gradient(to bottom, #ffcc66, #cc6600);
             border-radius: 15px;
@@ -155,10 +155,10 @@
             border-radius: 15px;
             width: 100px;
         }
-
+        
         /* ปุ่ม Home ที่เพิ่มใหม่ */
         .action-button.home-button {
-            background-color: #FFD700; /* Yellow */
+            background-color: #FFD700; /* สีเหลืองทอง */
             color: black;
             width: 60px;
             height: 60px;
@@ -173,6 +173,7 @@
 </head>
 <body>
     <div class="container">
+        <!-- Players -->
         <div class="player-container" id="playerA">
             <div class="player-name" contenteditable="true">PLAYER A</div>
             <div class="player-frame-score" contenteditable="true">0</div>
@@ -194,7 +195,9 @@
             <div class="player-score">0</div>
         </div>
 
+        <!-- Controls -->
         <div class="control-container">
+            <!-- ปุ่ม Home ที่เพิ่มใหม่ -->
             <button class="action-button home-button" onclick="window.location.href='index.html';">🏡</button>
             <button class="action-button setzero" onclick="resetAll()">Set Zero</button>
 
@@ -241,13 +244,16 @@
         function updateScoreDisplay(playerId) {
             const player = players[playerId];
             const scoreEl = document.querySelector(`#${playerId} .player-score`);
+            const frameEl = document.querySelector(`#${playerId} .player-frame-score`);
+
             scoreEl.textContent = player.score;
+            frameEl.textContent = player.frame;
+            
             if (Math.abs(player.score) >= 100) {
                 scoreEl.classList.add('three-digits');
             } else {
                 scoreEl.classList.remove('three-digits');
             }
-            document.querySelector(`#${playerId} .player-frame-score`).textContent = player.frame;
         }
 
         function addScore(points) {
