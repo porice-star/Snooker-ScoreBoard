@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Snooker Scoreboard</title>
+    <style>
+        /* Font from Google Fonts */
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('https://fonts.gstatic.com/s/bebasneue/v14/JTUSjIg1_vgSHg.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* Basic Body and HTML styling */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background-color: #006400; /* Dark green for snooker table feel */
+            color: white;
+            font-family: 'Bebas Neue', sans-serif;
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            padding: 2% 5%; /* Adjusted horizontal padding to give more space on the sides */
+            box-sizing: border-box;
+            position: relative;
+            touch-action: manipulation;
+            /* Added transition for a smooth background change */
+            transition: background-color 0.5s ease;
+        }
+        
+        /* New CSS class for the background image mode */
+        body.background-image-mode {
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent; /* Set to transparent to show the image */
+        }
+        
+        /* New CSS pseudo-element to darken the background image without affecting UI */
+        body.darken-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+            z-index: -1; /* Place it behind the UI content */
+            transition: background-color 0.5s ease;
+        }
+        
+        /* New styling for the Home and CG buttons container */
+        .top-left-buttons {
+            position: absolute;
+            top: 2vh;
+            left: 2vw;
+            display: flex;
+            gap: 1vw; /* เพิ่มช่องว่างระหว่างปุ่ม */
+            z-index: 1000;
+        }
+
+        /* New styling for the Home button */
+        .home-button, .cg-button {
+            width: 8vmin;
+            height: 8vmin;
+            border-radius: 50%;
+            background-color: #FFD700;
+            color: black;
+            font-size: 3vmin;
+            font-weight: bold;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        /* New styling for the Home button icon */
+        .home-button::after {
+            content: '🏠'; /* ใช้ Unicode character สำหรับรูปบ้าน */
+            font-size: 4vmin; /* ปรับขนาดไอคอน */
+            line-height: 1; /* เพื่อจัดตำแหน่งกึ่งกลาง */
+        }
+        
+        .home-button:active, .cg-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .home-button:focus, .cg-button:focus {
+            outline: none;
+        }
+        
+        /* Container for each player's side */
+        .player-side-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+            align-items: center;
+            width: 35%; 
+            text-align: center;
+            padding: 0;
+        }
+        
+        .player-side-container > * {
+            margin-bottom: 3.3vh;
+        }
+
+        .player-side-container > :last-child {
+            margin-bottom: 0;
+        }
+
+        /* Main container for the center section */
+        .center-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            text-align: center;
+        }
+
+        /* Group for Frame Score */
+        .frame-score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: absolute;
+            top: 2%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .frame-header {
+            font-size: 4.84vmin;
+            font-weight: bold;
+            text-shadow: 
+                -2px -2px 0 #000, 
+                2px -2px 0 #000, 
+                -2px 2px 0 #000, 
+                2px 2px 0 #000,
+                0 0 10px #fff; 
+            margin-bottom: 1%;
+        }
+
+        .frame-score-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .frame-score-wrapper > * {
+            margin: 0 2vw; 
+        }
+
+        .frame-score {
+            font-size: 15vmin;
+            font-weight: bold;
+            color: #FFFF00;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5), 0 0 5px #FFFF00;
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+        
+        .frame-score.editing {
+            color: #FF0000;
+        }
+
+        .frame-separator {
+            font-size: 15vmin;
+            color: #FFFF00;
+            text-shadow: 0 0 5px #FFFF00;
+            line-height: 1;
+        }
+
+        .diff-label {
+            font-size: 4vmin;
+            font-weight: bold;
+            color: #FFFFFF;
+            text-shadow: 
+                -2px -2px 0 #000, 
+                2px -2px 0 #000, 
+                -2px 2px 0 #000, 
+                2px 2px 0 #000,
+                0 0 10px #fff;
+        }
+
+        .diff-score {
+            font-size: 15vmin;
+            font-weight: bold;
+            color: #FF0000;
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5), 0 0 5px #FF0000;
+            line-height: 1;
+        }
+        
+        .diff-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 25vh;
+        }
+        
+        .diff-container > * {
+            margin-bottom: 1.5vh;
+        }
+
+        .diff-container > :last-child {
+            margin-bottom: 0;
+        }
+
+        .player-name {
+            font-size: 5.28vmin; 
+            font-weight: bold;
+            color: #FFFFFF;
+            width: 100%;
+            border: none;
+            background: none;
+            outline: none;
+            padding: 0;
+            text-shadow: 
+                -2px -2px 0 #000, 
+                2px -2px 0 #000, 
+                -2px 2px 0 #000, 
+                2px 2px 0 #000,
+                0 0 10px #fff; 
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            text-align: center; 
+            transition: transform 0.2s ease;
+            margin-top: 0;
+        }
+        
+        .player-name.editing {
+            color: #FF0000;
+        }
+
+        /* Container to fix the score display area height */
+        .player-score-container {
+            display: flex;
+            align-items: center; 
+            justify-content: center; 
+            width: 100%;
+            height: 55vh; /* Fixed height to prevent button shifting */
+        }
+
+        .player-score {
+            font-size: 63.05vmin;
+            font-weight: normal;
+            text-shadow: 0 0 10px #00FFFF, 0 0 20px #00FFFF;
+            color: #00FFFF;
+            line-height: 0.8;
+            transition: font-size 0.2s ease;
+        }
+        
+        /* New CSS class to adjust font size for three-digit scores */
+        .player-score.three-digit {
+            font-size: 45vmin;
+        }
+
+        /* Use separate rows to ensure correct layout */
+        .score-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 3vh;
+        }
+        
+        .score-buttons-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .score-buttons-row > * {
+            margin: 0 1vmin;
+        }
+        
+        /* Corrected styling for the snooker balls with 3D effect */
+        .snooker-ball {
+            width: 9vmin; 
+            height: 9vmin; 
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 4vmin;
+            font-weight: bold;
+            cursor: pointer;
+            
+            /* Add aspect-ratio to ensure a perfect circle */
+            aspect-ratio: 1 / 1;
+            
+            /* Enhanced 3D effect */
+            box-shadow: 
+                0 0 10px rgba(255, 255, 255, 0.2), 
+                0 8px 15px rgba(0, 0, 0, 0.6), 
+                inset 0 0 15px rgba(0, 0, 0, 0.2); 
+            
+            text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
+            position: relative;
+            transform: translateY(0);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .snooker-ball:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 0 5px rgba(255, 255, 255, 0.1),
+                0 4px 8px rgba(0, 0, 0, 0.5),
+                inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-buttons-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .action-buttons-container > * {
+            margin-bottom: 2.5vh;
+        }
+        
+        .action-buttons-container > :last-child {
+            margin-bottom: 0;
+        }
+        
+        .action-button {
+            color: #FFFFFF;
+            font-family: 'Bebas Neue', sans-serif;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            width: 16.2vw;
+            height: 9vh;
+            border-radius: 1vw;
+            font-size: 2.5vmin; 
+            box-shadow: 0.2vw 0.2vw 0.3vw rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            position: relative;
+            transform: translateY(0);
+        }
+
+        .action-button:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0,0,0,0.3), 0 3px 6px rgba(0,0,0,0.2);
+        }
+        
+        .action-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .finish-button {
+            background-color: #4CAF50;
+        }
+        
+        .set-zero-button {
+            background-color: #FF9800;
+        }
+        
+        .undo-button {
+            background-color: #F44336;
+        }
+        
+        .red { background-color: #FF0000; }
+        .yellow { background-color: #FFFF00; color: black; }
+        .green { background-color: #008000; }
+        .brown { background-color: #A52A2A; }
+        .blue { background-color: #0000FF; }
+        .pink { background-color: #FFC0CB; color: black; }
+        .black { background-color: #000000; }
+        
+        .black-red-ball { 
+            background: linear-gradient(to top right, black 50%, red 50%);
+            color: white;
+        }
+        
+        .gold-ball { 
+            background-color: #FFD700;
+            color: black;
+        }
+        
+        .white-ball { background-color: #FFFFFF; color: black; }
+
+        .message-box {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 1vmin 2vmin;
+            border-radius: 1vw;
+            font-size: 2.5vmin;
+            text-align: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            z-index: 100;
+        }
+        
+        .message-box.show {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-left-buttons">
+        <a href="index.html" class="home-button"></a>
+        <button id="cg-button" class="cg-button">CG</button>
+    </div>
+
+    <div class="frame-score-container">
+        <div class="frame-header">FRAME</div>
+        <div class="frame-score-wrapper">
+            <div class="frame-score" id="player1-frames">0</div>
+            <div class="frame-separator">:</div>
+            <div class="frame-score" id="player2-frames">0</div>
+        </div>
+    </div>
+    
+    <div class="player-side-container">
+        <input type="text" class="player-name" id="player1-name" maxlength="10" placeholder="Player 1" value="PLAYER 1">
+        <div class="player-score-container">
+            <div class="player-score" id="player1-score">0</div>
+        </div>
+        <div class="score-buttons" id="player1-buttons"></div>
+    </div>
+
+    <div class="center-container">
+        <div class="diff-container">
+            <div class="diff-label">DIFF</div>
+            <div class="diff-score" id="diff-score">0</div>
+        </div>
+        <div class="action-buttons-container">
+            <button class="action-button finish-button">Finish</button>
+            <button class="action-button set-zero-button">Set Zero</button>
+            <button class="action-button undo-button">Undo</button>
+        </div>
+    </div>
+    
+    <div class="player-side-container">
+        <input type="text" class="player-name" id="player2-name" maxlength="10" placeholder="Player 2" value="PLAYER 2">
+        <div class="player-score-container">
+            <div class="player-score" id="player2-score">0</div>
+        </div>
+        <div class="score-buttons" id="player2-buttons"></div>
+    </div>
+    
+    <div id="message-box" class="message-box"></div>
+
+    <script>
+        // Function to prevent double-tap zoom on mobile devices
+        function preventZoom() {
+            let lastTouchEnd = 0;
+            
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+
+            document.addEventListener('touchmove', function (event) {
+                if (event.touches.length > 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('dblclick', function (event) {
+                event.preventDefault();
+            }, false);
+        }
+
+        window.onload = preventZoom;
+
+        // Snooker ball scores data
+        const ballScores = [
+            { score: 1, color: 'red' },
+            { score: 2, color: 'yellow' },
+            { score: 3, color: 'green' },
+            { score: 4, color: 'brown' },
+            { score: 5, color: 'blue' },
+            { score: 6, color: 'pink' },
+            { score: 7, color: 'black' },
+            { score: 8, color: 'black-red-ball' },
+            { score: 10, color: 'gold-ball' }
+        ];
+        
+        let scoreHistory = [];
+
+        // Function to adjust viewport height on mobile devices
+        function adjustViewportHeight() {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+
+        window.addEventListener('load', adjustViewportHeight);
+        window.addEventListener('resize', adjustViewportHeight);
+        adjustViewportHeight();
+
+        // Function to update the score display
+        function updateScoreDisplay(scoreElement, newScore) {
+            scoreElement.textContent = newScore;
+            
+            // Check if the score is 3 digits or more and adjust font size
+            if (String(newScore).length >= 3) {
+                scoreElement.classList.add('three-digit');
+            } else {
+                scoreElement.classList.remove('three-digit');
+            }
+        }
+
+        // Function to calculate and update the score difference
+        function updateDiff() {
+            const score1 = parseInt(document.getElementById('player1-score').textContent);
+            const score2 = parseInt(document.getElementById('player2-score').textContent);
+            const diff = Math.abs(score1 - score2);
+            document.getElementById('diff-score').textContent = diff;
+        }
+        
+        // --- Text-to-Speech (TTS) usage ---
+        // A mapping of ball scores to their spoken English words.
+        const scoreVoicesEnglish = {
+            1: 'One', 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five', 
+            6: 'Six', 7: 'Seven', 8: 'Eight', 10: 'Ten'
+        };
+
+        // Main function to handle score button clicks
+        function handleScoreClick(scoreDisplay, ballScore, playerId) {
+            // Cancel any ongoing speech to prioritize the new click
+            window.speechSynthesis.cancel();
+            
+            const currentScore = parseInt(scoreDisplay.textContent);
+            const newScore = currentScore + ballScore;
+            
+            updateScoreDisplay(scoreDisplay, newScore);
+            
+            scoreHistory.push({ type: 'score', player: playerId, score: ballScore, oldScore: currentScore });
+            
+            updateDiff();
+
+            // Speak the ball score first
+            const ballScoreText = `${scoreVoicesEnglish[ballScore] || ballScore.toString()}`;
+            const utteranceBallScore = new SpeechSynthesisUtterance(ballScoreText);
+            utteranceBallScore.lang = 'en-US';
+            
+            // Speak the total score after a slight delay
+            utteranceBallScore.onend = () => {
+                setTimeout(() => {
+                    const totalScoreText = newScore.toString();
+                    const utteranceTotalScore = new SpeechSynthesisUtterance(totalScoreText);
+                    utteranceTotalScore.lang = 'en-US';
+                    window.speechSynthesis.speak(utteranceTotalScore);
+                }, 500); // 500ms delay
+            };
+            
+            window.speechSynthesis.speak(utteranceBallScore);
+        }
+
+        // Function to create the score buttons
+        function createButtons(playerId) {
+            const buttonsContainer = document.getElementById(playerId + '-buttons');
+            const scoreDisplay = document.getElementById(playerId + '-score');
+            
+            buttonsContainer.innerHTML = ''; 
+            
+            const firstRow = document.createElement('div');
+            firstRow.className = 'score-buttons-row';
+            buttonsContainer.appendChild(firstRow);
+
+            const secondRow = document.createElement('div');
+            secondRow.className = 'score-buttons-row';
+            buttonsContainer.appendChild(secondRow);
+            
+            for (let i = 0; i < 5; i++) {
+                const ball = ballScores[i];
+                const button = document.createElement('div');
+                button.className = 'snooker-ball ' + ball.color;
+                button.textContent = ball.score;
+                button.addEventListener('click', () => {
+                    handleScoreClick(scoreDisplay, ball.score, playerId);
+                });
+                firstRow.appendChild(button);
+            }
+            
+            for (let i = 5; i < ballScores.length; i++) {
+                const ball = ballScores[i];
+                const button = document.createElement('div');
+                button.className = 'snooker-ball ' + ball.color;
+                button.textContent = ball.score;
+                button.addEventListener('click', () => {
+                    handleScoreClick(scoreDisplay, ball.score, playerId);
+                });
+                secondRow.appendChild(button);
+            }
+        }
+        
+        // --- Sound Generation Functions (UPDATED) ---
+        let audioContext;
+
+        function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        /**
+         * Plays a short, percussive sound.
+         * @param {number} frequency - The frequency of the sound in Hz.
+         * @param {number} duration - The duration of the sound in seconds.
+         * @param {string} type - The waveform type (e.g., 'sine', 'square').
+         */
+        function playPercussion(frequency, duration, type = 'sine') {
+            const context = getAudioContext();
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+
+            // Use an ADSR envelope to make it sound more like a tap or thud
+            gainNode.gain.setValueAtTime(0.8, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+
+            oscillator.start(0);
+            oscillator.stop(context.currentTime + duration);
+        }
+
+        /**
+         * Plays a triumphant, celebratory sound.
+         */
+        function playFinishSound() {
+            const context = getAudioContext();
+            const now = context.currentTime;
+
+            // Triumphant chord: C-E-G
+            const notes = [
+                { freq: 523.25, time: now, duration: 0.2 }, // C5
+                { freq: 659.25, time: now + 0.1, duration: 0.2 }, // E5
+                { freq: 783.99, time: now + 0.2, duration: 0.3 }  // G5
+            ];
+
+            notes.forEach(note => {
+                const oscillator = context.createOscillator();
+                const gainNode = context.createGain();
+                oscillator.type = 'triangle';
+                oscillator.frequency.value = note.freq;
+
+                gainNode.gain.setValueAtTime(0.5, note.time);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, note.time + note.duration);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(context.destination);
+
+                oscillator.start(note.time);
+                oscillator.stop(note.time + note.duration);
+            });
+        }
+
+        /**
+         * Plays a clear, simple reset sound.
+         */
+        function playSetZeroSound() {
+            playPercussion(150, 0.1, 'square'); // A low, brief square wave for a percussive feel
+        }
+        
+        /**
+         * Plays a quick, descending "undo" sound.
+         */
+        function playUndoSound() {
+            const context = getAudioContext();
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(440, context.currentTime);
+            oscillator.frequency.linearRampToValueAtTime(180, context.currentTime + 0.25);
+
+            gainNode.gain.setValueAtTime(0.5, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+
+            oscillator.start(0);
+            oscillator.stop(context.currentTime + 0.25);
+        }
+
+        // --- Button Event Listeners (UPDATED) ---
+
+        // "Finish" button handler
+        document.querySelector('.finish-button').onclick = () => {
+            playFinishSound(); // Play sound
+            const score1 = parseInt(document.getElementById('player1-score').textContent);
+            const score2 = parseInt(document.getElementById('player2-score').textContent);
+            const frames1 = parseInt(document.getElementById('player1-frames').textContent);
+            const frames2 = parseInt(document.getElementById('player2-frames').textContent);
+
+            scoreHistory.push({ type: 'finish', score1: score1, score2: score2, frames1: frames1, frames2: frames2 });
+
+            let winnerName = '';
+            let newFrames1 = frames1;
+            let newFrames2 = frames2;
+
+            if (score1 > score2) {
+                const frameScoreElement = document.getElementById('player1-frames');
+                newFrames1 = parseInt(frameScoreElement.textContent) + 1;
+                frameScoreElement.textContent = newFrames1;
+                winnerName = document.getElementById('player1-name').value;
+            } else if (score2 > score1) {
+                const frameScoreElement = document.getElementById('player2-frames');
+                newFrames2 = parseInt(frameScoreElement.textContent) + 1;
+                frameScoreElement.textContent = newFrames2;
+                winnerName = document.getElementById('player2-name').value;
+            }
+            
+            updateScoreDisplay(document.getElementById('player1-score'), 0);
+            updateScoreDisplay(document.getElementById('player2-score'), 0);
+            updateDiff();
+            createButtons('player1');
+            createButtons('player2');
+        };
+        
+        // "Set Zero" button handler
+        document.querySelector('.set-zero-button').onclick = () => {
+            playSetZeroSound(); // Play sound
+            updateScoreDisplay(document.getElementById('player1-score'), 0);
+            updateScoreDisplay(document.getElementById('player2-score'), 0);
+            updateDiff();
+            scoreHistory = [];
+            createButtons('player1');
+            createButtons('player2');
+        };
+
+        // "Undo" button handler
+        document.querySelector('.undo-button').onclick = () => {
+            playUndoSound(); // Play sound
+            if (scoreHistory.length > 0) {
+                const lastMove = scoreHistory.pop();
+                
+                if (lastMove.type === 'finish') {
+                    updateScoreDisplay(document.getElementById('player1-score'), lastMove.score1);
+                    updateScoreDisplay(document.getElementById('player2-score'), lastMove.score2);
+                    document.getElementById('player1-frames').textContent = lastMove.frames1;
+                    document.getElementById('player2-frames').textContent = lastMove.frames2;
+                } else {
+                    updateScoreDisplay(document.getElementById(lastMove.player + '-score'), lastMove.oldScore);
+                }
+                updateDiff();
+                createButtons('player1');
+                createButtons('player2');
+            }
+        };
+
+        const player1Frames = document.getElementById('player1-frames');
+        const player2Frames = document.getElementById('player2-frames');
+        const player1NameInput = document.getElementById('player1-name');
+        const player2NameInput = document.getElementById('player2-name');
+
+        // Function to make the frame score editable
+        function setupEditable(element) {
+            element.contentEditable = true;
+            element.addEventListener('focus', () => {
+                element.classList.add('editing');
+                const range = document.createRange();
+                range.selectNodeContents(element);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
+            element.addEventListener('blur', () => {
+                element.classList.remove('editing');
+            });
+            element.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    element.blur();
+                }
+            });
+        }
+        
+        setupEditable(player1Frames);
+        setupEditable(player2Frames);
+
+        // Function to make player names editable
+        function setupNameEditing(element) {
+            element.addEventListener('focus', () => {
+                element.classList.add('editing');
+                element.select();
+            });
+            element.addEventListener('blur', () => {
+                element.classList.remove('editing');
+            });
+            element.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    element.blur();
+                }
+            });
+        }
+        
+        setupNameEditing(player1NameInput);
+        setupNameEditing(player2NameInput);
+        
+        createButtons('player1');
+        createButtons('player2');
+
+        // --- New Background Toggle Logic with brightness adjustment ---
+        const cgButton = document.getElementById('cg-button');
+        const body = document.body;
+        
+        // Use correct file names from GitHub
+        const backgroundImages = [
+            'CothSS.jpg',
+            'image1.jpg',
+            'image2.jpg',
+            'image3.jpg',
+            'image4.jpg'
+        ];
+        
+        // Define the base URL for the GitHub repository
+        const githubBaseUrl = 'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/';
+        
+        let currentImageIndex = 0;
+        
+        function changeBackground() {
+            if (backgroundImages.length === 0) {
+                console.error("No background images available.");
+                return;
+            }
+
+            const imageUrl = githubBaseUrl + backgroundImages[currentImageIndex];
+            const img = new Image();
+            
+            img.onload = () => {
+                // Apply the background image
+                body.style.backgroundImage = `url('${imageUrl}')`;
+                
+                // Add the background-image-mode class to set the background
+                body.classList.add('background-image-mode');
+                
+                // Check if the current image needs dimming
+                const needsDarkening = backgroundImages[currentImageIndex].startsWith('image');
+                
+                if (needsDarkening) {
+                    body.classList.add('darken-background');
+                } else {
+                    body.classList.remove('darken-background');
+                }
+                
+                currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+            };
+            
+            img.onerror = () => {
+                console.error(`Failed to load image: ${imageUrl}`);
+                showMessage("Failed to load image. Trying the next one...", 3000);
+                
+                currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+                changeBackground();
+            };
+            
+            img.src = imageUrl;
+        }
+
+        function showMessage(message, duration) {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, duration);
+        }
+
+        cgButton.addEventListener('click', () => {
+            changeBackground();
+        });
+
+    </script>
+</body>
+</html>
