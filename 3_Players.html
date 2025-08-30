@@ -268,7 +268,7 @@
         .undo-button { background-color: #F44336; }
 
         .sign-button {
-            background-color: #8B0000;
+            background-color: #0000FF; /* Blue color for inactive */
             color: white;
             border-radius: 8px;
             width: 36%;
@@ -288,7 +288,7 @@
         }
 
         .sign-button.active {
-            background-color: #DC143C;
+            background-color: #DC143C; /* Crimson/Dark Red for active/foul */
             box-shadow: 0 0 15px rgba(220, 20, 60, 0.8);
             transform: translateY(0);
         }
@@ -595,6 +595,7 @@
         let targetElement = null; // Reference to the element being edited (score or name)
 
         /* ====================== TTS: robust & no cut-off ====================== */
+        // ตรวจสอบและเลือกเสียงภาษาอังกฤษที่ดีที่สุดสำหรับ TTS
         let ttsInitialized = false;
         let ttsVoice = null;
 
@@ -613,7 +614,7 @@
             if (!('speechSynthesis' in window) || ttsInitialized) return;
             try {
                 ttsVoice = chooseEnglishVoice();
-                // Warm-up with a silent utterance (prevents first-utterance clipping on some browsers)
+                // พูดคำสั้นๆ แบบเงียบๆ เพื่อกระตุ้นระบบ (แก้ปัญหาเสียงขาดตอนครั้งแรกบนบางเบราว์เซอร์)
                 const warm = new SpeechSynthesisUtterance(' ');
                 warm.volume = 0;
                 warm.rate = 1;
@@ -627,14 +628,14 @@
             }
         }
 
-        // Re-pick voice when voices list becomes available
+        // เลือกเสียงใหม่เมื่อรายการเสียงพร้อมใช้งาน
         if ('speechSynthesis' in window) {
             window.speechSynthesis.onvoiceschanged = () => {
                 ttsVoice = chooseEnglishVoice();
             };
         }
 
-        // Ensure TTS is allowed/primed by the first user interaction (iOS/Safari quirk)
+        // ตรวจสอบให้แน่ใจว่า TTS พร้อมใช้งานเมื่อมีการแตะหน้าจอครั้งแรก (ปัญหาทั่วไปของ iOS/Safari)
         function installTTSUnlock() {
             const unlock = () => {
                 initTTS();
@@ -645,20 +646,19 @@
             document.addEventListener('keydown', unlock, {once: true, capture: true});
         }
 
-        function speakPlayerName(name) {
-            if (!('speechSynthesis' in window)) return;        // no-op if unsupported
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
             try {
                 if (!ttsInitialized) initTTS();
-                window.speechSynthesis.cancel();               // clear any queued speech
-                const u = new SpeechSynthesisUtterance(name);
-                u.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = (ttsVoice && u.lang.toLowerCase().startsWith('th')) ? u.lang : 'en-US';
                 if (ttsVoice) u.voice = ttsVoice;
                 u.rate = 1;
                 u.pitch = 1;
-                // slight delay after cancel avoids clipped first phoneme on some engines
-                setTimeout(() => window.speechSynthesis.speak(u), 60);
+                setTimeout(() => window.speechSynthesis.speak(u), 100); // เพิ่ม delay เพื่อให้ระบบมีเวลาเตรียมตัว
             } catch (e) {
-                // fail silently to avoid UI changes
+                // fail silently
             }
         }
         /* ===================================================================== */
@@ -685,14 +685,19 @@
             }, false);
         }
 
+        function resetScoreSign() {
+            const minusButton = document.getElementById('minus-button');
+            minusButton.classList.remove('active');
+            scoreSign = 1;
+        }
+
         window.onload = () => {
             preventZoom();
             installTTSUnlock();      // ✅ prime TTS on first interaction
             setTimeout(initTTS, 0);  // ✅ also try to init immediately for browsers that allow it
 
-            const minusButton = document.getElementById('minus-button');
-            minusButton.classList.remove('active');
-            scoreSign = 1;
+            resetScoreSign(); // Reset to positive sign on page load
+            
             setupEditableFields(); // New function to handle all editable fields
             setupKeypad();
             setupNameModal();
@@ -721,17 +726,21 @@
         // When clicking player-container (not on editable fields), set active + speak name
         document.querySelectorAll('.player-container').forEach(container => {
             container.addEventListener('click', (e) => {
+                // Check if the click is on the main player-container or the big score display
                 if (e.target.closest('.editable-score') || e.target.closest('.editable-name')) {
                     return; // do not interfere with editing
                 }
                 const playerId = container.getAttribute('data-player-id');
                 setActivePlayer(playerId);
+                
+                // Reset the score sign to positive whenever a player is selected
+                resetScoreSign();
 
                 // speak the player's displayed name in English
                 const nameEl = container.querySelector('.player-name');
                 if (nameEl) {
                     const nameText = nameEl.textContent.trim();
-                    if (nameText) speakPlayerName(nameText);
+                    if (nameText) speakText(nameText);
                 }
             });
         });
@@ -768,11 +777,13 @@
             } else {
                 showMessage("No moves to undo.", 2000);
             }
+            resetScoreSign();
         };
 
         document.querySelector('.set-zero-button').onclick = () => {
             document.querySelectorAll('.player-score').forEach(el => updateScoreDisplay(el, 0));
             scoreHistory = [];
+            resetScoreSign();
         };
 
         document.querySelector('.finish-button').onclick = () => {
@@ -807,15 +818,19 @@
 
             document.querySelectorAll('.player-score').forEach(el => updateScoreDisplay(el, 0));
             scoreHistory = [];
+            resetScoreSign();
         };
         
         // Toggle sign when minus button is clicked
         document.getElementById('minus-button').addEventListener('click', (e) => {
-            e.target.classList.toggle('active');
-            if (e.target.classList.contains('active')) {
+            const minusButton = e.target;
+            if (scoreSign === 1) {
                 scoreSign = -1;
+                minusButton.classList.add('active');
+                speakText("Foul");
             } else {
                 scoreSign = 1;
+                minusButton.classList.remove('active');
             }
         });
 
