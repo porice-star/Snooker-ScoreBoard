@@ -78,7 +78,6 @@
             align-items: center;
             justify-content: center;
             margin-bottom: 10px;
-            /* New: Ensure this element does not shrink */
             flex-shrink: 0;
             width: 100%;
         }
@@ -102,7 +101,6 @@
             text-align: center;
             transition: transform 0.2s ease;
             margin-right: 10px;
-            /* New: Set min-height to fix position */
             min-height: 5vmin;
         }
 
@@ -117,33 +115,28 @@
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5), 0 0 5px #FFFF00;
             cursor: pointer;
             transition: transform 0.2s ease;
-            
-            /* The key change: Use absolute positioning relative to .player-container */
             position: absolute;
             top: 5%;
             right: 5%;
             transform: translate(0, 0);
-            z-index: 10; /* Ensure it's above other elements */
+            z-index: 10;
         }
         
         .player-frame-score:active {
             transform: scale(0.95);
         }
         
-        /* The score is now centered within its own flex container which has a fixed size */
         .player-score-wrapper {
-            /* This is the key change: a container for the score that takes up available space */
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
-            height: 100%; /* Take up remaining height of the player container */
-            overflow: hidden; /* Prevents text from overflowing and affecting layout */
+            height: 100%;
+            overflow: hidden;
         }
 
         .player-score {
-            /* The actual score element. It will shrink to fit the wrapper. */
-            font-size: 25vmin; /* Adjusted initial font size to be more responsive */
+            font-size: 25vmin;
             font-weight: normal;
             text-shadow: 0 0 10px #00FFFF, 0 0 20px #00FFFF;
             color: #00FFFF;
@@ -151,16 +144,14 @@
             transition: font-size 0.2s ease;
             cursor: pointer;
             text-align: center;
-            /* Flexbox properties to ensure centering */
             display: flex;
             justify-content: center;
             align-items: center;
-            white-space: nowrap; /* Prevents the text from wrapping */
+            white-space: nowrap;
         }
         
-        /* This class will be applied by JS to shrink the font for 3 digits */
         .player-score.three-digit {
-            font-size: 15vmin; /* Adjusted font size to fit the container better */
+            font-size: 15vmin;
         }
 
         /* Control container (bottom right) */
@@ -194,14 +185,12 @@
             flex-wrap: wrap;
         }
         
-        /* Increased spacing between buttons */
         .score-buttons-row > * {
             margin: 0 0.7vmin;
             min-width: 7.35vmin;
             min-height: 7.35vmin;
         }
         
-        /* Further increased size for the score balls */
         .snooker-ball {
             width: 10vmin;
             height: 10vmin;
@@ -211,7 +200,7 @@
             justify-content: center;
             align-items: center;
             color: white;
-            font-size: 4.5vmin; /* Increased font size */
+            font-size: 4.5vmin;
             font-weight: bold;
             cursor: pointer;
             aspect-ratio: 1 / 1;
@@ -257,9 +246,8 @@
             height: 6vh;
             border-radius: 1vw;
             font-size: 2.5vmin;
-            box-shadow: 0.2vw 0.2vw 0.3vw rgba(0, 0, 0, 0.5);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
             box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
             position: relative;
             transform: translateY(0);
         }
@@ -279,9 +267,8 @@
         .set-zero-button { background-color: #FF9800; }
         .undo-button { background-color: #F44336; }
 
-        /* Updated styling for the minus button */
         .sign-button {
-            background-color: #8B0000; /* Dark Red */
+            background-color: #8B0000;
             color: white;
             border-radius: 8px;
             width: 36%;
@@ -301,7 +288,7 @@
         }
 
         .sign-button.active {
-            background-color: #DC143C; /* Crimson */
+            background-color: #DC143C;
             box-shadow: 0 0 15px rgba(220, 20, 60, 0.8);
             transform: translateY(0);
         }
@@ -316,26 +303,23 @@
         .black { background-color: #000000; }
         .gold-ball { background-color: #FFD700; color: black; }
 
-        /* New: Home button style */
+        /* Home button style */
         .home-button {
-            background-color: #FFD700; /* Yellow */
+            background-color: #FFD700;
             color: black;
-            width: 6vh; /* Make it square */
-            height: 6vh; /* Make it square */
-            border-radius: 50%; /* Make it round */
-            font-size: 2.5vmin; /* Adjust font size */
-            display: flex; /* Use flex to center content */
+            width: 6vh;
+            height: 6vh;
+            border-radius: 50%;
+            font-size: 2.5vmin;
+            display: flex;
             justify-content: center;
             align-items: center;
-            padding: 0; /* Remove default padding */
-            margin: 0 0.5vw; /* Adjust margin to fit with other buttons */
-            box-shadow: 0 5px 10px rgba(0,0,0,0.3); /* Add shadow for depth */
+            padding: 0;
+            margin: 0 0.5vw;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
         }
         
-        /* Fix the alignment of emoji and text for home button */
-        .home-button.home-text {
-            color: white; /* Ensure text is visible */
-        }
+        .home-button.home-text { color: white; }
         
         .home-button:hover {
             transform: translateY(-2px);
@@ -369,7 +353,7 @@
             opacity: 1;
         }
         
-        /* New styles for the numeric keypad */
+        /* Numeric keypad */
         .keypad-modal {
             position: fixed;
             top: 0;
@@ -381,7 +365,7 @@
             justify-content: center;
             align-items: center;
             z-index: 200;
-            display: none; /* Hidden by default */
+            display: none;
         }
         
         .keypad-container {
@@ -454,7 +438,7 @@
         .keypad-button.backspace { background-color: #F44336; color: white; }
         .keypad-button.cancel { background-color: #FF9800; color: white; }
         
-        /* New styles for the name input modal */
+        /* Name input modal */
         .name-modal {
             position: fixed;
             top: 0;
@@ -466,7 +450,7 @@
             justify-content: center;
             align-items: center;
             z-index: 200;
-            display: none; /* Hidden by default */
+            display: none;
         }
         
         .name-container {
@@ -610,6 +594,75 @@
         let scoreSign = 1;
         let targetElement = null; // Reference to the element being edited (score or name)
 
+        /* ====================== TTS: robust & no cut-off ====================== */
+        let ttsInitialized = false;
+        let ttsVoice = null;
+
+        function chooseEnglishVoice() {
+            if (!('speechSynthesis' in window)) return null;
+            const voices = window.speechSynthesis.getVoices() || [];
+            const v =
+                voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us')) ||
+                voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-gb')) ||
+                voices.find(v => /english/i.test(v.name)) ||
+                null;
+            return v;
+        }
+
+        function initTTS() {
+            if (!('speechSynthesis' in window) || ttsInitialized) return;
+            try {
+                ttsVoice = chooseEnglishVoice();
+                // Warm-up with a silent utterance (prevents first-utterance clipping on some browsers)
+                const warm = new SpeechSynthesisUtterance(' ');
+                warm.volume = 0;
+                warm.rate = 1;
+                warm.pitch = 1;
+                warm.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                if (ttsVoice) warm.voice = ttsVoice;
+                window.speechSynthesis.speak(warm);
+                ttsInitialized = true;
+            } catch (e) {
+                // no-op
+            }
+        }
+
+        // Re-pick voice when voices list becomes available
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                ttsVoice = chooseEnglishVoice();
+            };
+        }
+
+        // Ensure TTS is allowed/primed by the first user interaction (iOS/Safari quirk)
+        function installTTSUnlock() {
+            const unlock = () => {
+                initTTS();
+                document.removeEventListener('pointerdown', unlock, {capture:true});
+                document.removeEventListener('keydown', unlock, {capture:true});
+            };
+            document.addEventListener('pointerdown', unlock, {once: true, capture: true});
+            document.addEventListener('keydown', unlock, {once: true, capture: true});
+        }
+
+        function speakPlayerName(name) {
+            if (!('speechSynthesis' in window)) return;        // no-op if unsupported
+            try {
+                if (!ttsInitialized) initTTS();
+                window.speechSynthesis.cancel();               // clear any queued speech
+                const u = new SpeechSynthesisUtterance(name);
+                u.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                if (ttsVoice) u.voice = ttsVoice;
+                u.rate = 1;
+                u.pitch = 1;
+                // slight delay after cancel avoids clipped first phoneme on some engines
+                setTimeout(() => window.speechSynthesis.speak(u), 60);
+            } catch (e) {
+                // fail silently to avoid UI changes
+            }
+        }
+        /* ===================================================================== */
+
         // Function to prevent double-tap zoom on mobile devices
         function preventZoom() {
             let lastTouchEnd = 0;
@@ -634,6 +687,9 @@
 
         window.onload = () => {
             preventZoom();
+            installTTSUnlock();      // ✅ prime TTS on first interaction
+            setTimeout(initTTS, 0);  // ✅ also try to init immediately for browsers that allow it
+
             const minusButton = document.getElementById('minus-button');
             minusButton.classList.remove('active');
             scoreSign = 1;
@@ -645,8 +701,6 @@
 
         function updateScoreDisplay(scoreElement, newScore) {
             scoreElement.textContent = newScore;
-            // The score wrapper will automatically handle the size, but this is a good
-            // backup to shrink the font if needed.
             if (String(newScore).length >= 3) {
                 scoreElement.classList.add('three-digit');
             } else {
@@ -664,22 +718,28 @@
             scoreHistory.push({ type: 'score', player: activePlayerId, score: parseInt(score) * scoreSign, oldScore: currentScore });
         }
 
+        // When clicking player-container (not on editable fields), set active + speak name
         document.querySelectorAll('.player-container').forEach(container => {
             container.addEventListener('click', (e) => {
-                // If the click is on an editable field, we handle that separately.
                 if (e.target.closest('.editable-score') || e.target.closest('.editable-name')) {
-                    return;
+                    return; // do not interfere with editing
                 }
-                // If not on an editable field, it's a click to change the active player.
                 const playerId = container.getAttribute('data-player-id');
                 setActivePlayer(playerId);
+
+                // speak the player's displayed name in English
+                const nameEl = container.querySelector('.player-name');
+                if (nameEl) {
+                    const nameText = nameEl.textContent.trim();
+                    if (nameText) speakPlayerName(nameText);
+                }
             });
         });
 
         document.querySelectorAll('.snooker-ball').forEach(button => {
             button.addEventListener('click', () => {
                 const score = button.getAttribute('data-score');
-                if (score) { // Check if the button has a score attribute
+                if (score) { 
                     handleScoreClick(score);
                 }
             });
@@ -768,33 +828,33 @@
         }
         
         function setupEditableFields() {
-            // For Scores (frame) - only these should open the keypad
+            // For frame scores (open keypad)
             document.querySelectorAll('.player-frame-score').forEach(scoreEl => {
                 scoreEl.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Stop the click from bubbling to the parent player container
+                    e.stopPropagation();
                     const parentContainer = scoreEl.closest('.player-container');
                     const newActivePlayerId = parentContainer.getAttribute('data-player-id');
-                    setActivePlayer(newActivePlayerId); // Make this player active
+                    setActivePlayer(newActivePlayerId);
                     
                     targetElement = scoreEl;
                     showKeypad(parseInt(scoreEl.textContent));
                 });
             });
             
-            // For Names
+            // For Names (open name modal)
             document.querySelectorAll('.editable-name').forEach(nameEl => {
                 nameEl.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const parentContainer = nameEl.closest('.player-container');
                     const newActivePlayerId = parentContainer.getAttribute('data-player-id');
-                    setActivePlayer(newActivePlayerId); // Make this player active
+                    setActivePlayer(newActivePlayerId);
 
                     targetElement = nameEl;
                     showNameModal(nameEl.textContent);
                 });
             });
             
-            // Remove the `editable-score` class from the main score elements to prevent them from opening the keypad
+            // Ensure main big scores don't open keypad
             document.querySelectorAll('.player-score').forEach(scoreEl => {
                 scoreEl.classList.remove('editable-score');
             });
