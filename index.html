@@ -15,7 +15,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-image: url('BackgroundIndex.jpg');
+            background-image: url('BackgroundIndex.jpg'); /* ต้องแน่ใจว่ามีไฟล์รูปภาพนี้อยู่ในโฟลเดอร์เดียวกัน */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -52,9 +52,11 @@
 
         .player-options {
             display: flex;
-            flex-direction: column;
-            gap: 2em;
+            flex-direction: row; /* เปลี่ยนเป็นแนวนอน */
+            gap: 2em; /* เพิ่มระยะห่างระหว่างปุ่ม */
             align-items: center;
+            justify-content: center;
+            margin-bottom: 2em;
         }
 
         .snooker-ball-button {
@@ -75,8 +77,8 @@
             /* ปรับแต่งแสงและเงาเพื่อให้ดูเหมือนลูกบอลทรงกลมและลอยได้ดีขึ้น */
             box-shadow:
                 /* เงาภายใน (แสงสะท้อน) */
-                inset 0 0 50px rgba(255, 255, 255, 0.5), /* แสงสะท้อนขนาดใหญ่ */
-                inset 10px -10px 50px rgba(0, 0, 0, 0.6), /* เงาด้านใน */
+                inset 0 0 50px rgba(255, 255, 255, 0.5),
+                inset 10px -10px 50px rgba(0, 0, 0, 0.6),
                 /* เงาภายนอก (เงาที่ทำให้ลอย) */
                 0 15px 30px rgba(0, 0, 0, 0.9),
                 0 0 0 5px rgba(255, 255, 255, 0.2);
@@ -124,13 +126,41 @@
             background: radial-gradient(circle at 30% 30%, #ff99cc, #cc3399);
         }
 
+        .button-exit {
+            background: radial-gradient(circle at 30% 30%, #444444, #000000);
+        }
+        
         a {
             text-decoration: none;
+        }
+
+        /* ปุ่ม Exit */
+        .exit-button-container {
+            position: absolute;
+            bottom: 2em;
+            right: 2em;
+        }
+
+        .exit-button-container button {
+            width: 15vmin;
+            height: 15vmin;
+            font-size: 1.5em;
+        }
+
+        .exit-button-container button:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow:
+                inset 0 0 40px rgba(255, 255, 255, 0.6),
+                inset 8px -8px 40px rgba(0, 0, 0, 0.7),
+                0 20px 40px rgba(0, 0, 0, 1),
+                0 0 0 5px rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 <body>
     <h1>Snooker Scoreboard</h1>
+
+    <!-- ตัวเลือกจำนวนผู้เล่นที่จัดวางแนวนอน -->
     <div class="player-options">
         <a href="2_Players.html">
             <button class="snooker-ball-button button-2-players">
@@ -151,5 +181,21 @@
             </button>
         </a>
     </div>
+
+    <!-- ปุ่มทางออกที่อยู่ด้านล่างขวา -->
+    <div class="exit-button-container">
+        <button class="snooker-ball-button button-exit" onclick="handleExit()">
+            Exit
+        </button>
+    </div>
+
+    <script>
+        // ฟังก์ชันสำหรับจัดการปุ่ม Exit
+        function handleExit() {
+            // การใช้ window.close() อาจไม่ทำงานในบางเบราว์เซอร์เนื่องจากข้อจำกัดด้านความปลอดภัย
+            // ผู้ใช้อาจต้องปิดหน้าต่างด้วยตนเอง
+            window.close();
+        }
+    </script>
 </body>
 </html>
