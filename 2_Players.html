@@ -57,18 +57,19 @@
             transition: background-color 0.5s ease;
         }
         
-        /* New styling for the Home and CG buttons container */
+        /* New styling for the CG button container */
         .top-left-buttons {
             position: absolute;
             top: 2vh;
             left: 2vw;
             display: flex;
+            flex-direction: column; /* Changed to column to stack buttons vertically */
             gap: 1vw; /* เพิ่มช่องว่างระหว่างปุ่ม */
             z-index: 1000;
         }
 
-        /* New styling for the Home button */
-        .home-button, .cg-button {
+        /* New styling for the CG button */
+        .cg-button, .home-button { /* Added .home-button to the selector */
             width: 8vmin;
             height: 8vmin;
             border-radius: 50%;
@@ -85,20 +86,13 @@
             align-items: center;
             text-decoration: none;
         }
-
-        /* New styling for the Home button icon */
-        .home-button::after {
-            content: '🏠'; /* ใช้ Unicode character สำหรับรูปบ้าน */
-            font-size: 4vmin; /* ปรับขนาดไอคอน */
-            line-height: 1; /* เพื่อจัดตำแหน่งกึ่งกลาง */
-        }
         
-        .home-button:active, .cg-button:active {
+        .cg-button:active, .home-button:active { /* Added .home-button to the selector */
             transform: translateY(2px);
             box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
         
-        .home-button:focus, .cg-button:focus {
+        .cg-button:focus, .home-button:focus { /* Added .home-button to the selector */
             outline: none;
         }
         
@@ -427,7 +421,11 @@
 </head>
 <body>
     <div class="top-left-buttons">
-        <a href="index.html" class="home-button"></a>
+        <button id="home-button" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="100%" height="100%">
+                <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2zm0 2.21l6 6v7.79h-4v-6h-4v6h-4v-7.79l6-6z"/>
+            </svg>
+        </button>
         <button id="cg-button" class="cg-button">CG</button>
     </div>
 
@@ -834,6 +832,7 @@
 
         // --- New Background Toggle Logic with brightness adjustment ---
         const cgButton = document.getElementById('cg-button');
+        const homeButton = document.getElementById('home-button');
         const body = document.body;
         
         // Use correct file names from GitHub
@@ -900,6 +899,11 @@
 
         cgButton.addEventListener('click', () => {
             changeBackground();
+        });
+        
+        homeButton.addEventListener('click', () => {
+             // Logic for the home button
+            window.location.href = 'index.html';
         });
 
     </script>
