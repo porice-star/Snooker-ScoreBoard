@@ -40,7 +40,7 @@
             align-items: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             overflow: hidden;
-            height: 98%;
+            height: 96%; /* Adjusted height */
             cursor: pointer;
         }
 
@@ -87,7 +87,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-wrap: nowrap;
+            flex-wrap: nowrap; /* Forces buttons to stay in a single row */
             gap: 12px;
             padding: 10px;
             background-color: #013220;
@@ -177,6 +177,8 @@
             padding: 0;
         }
     </style>
+    <!-- Tone.js library for audio generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 </head>
 <body>
     <div class="container">
@@ -226,6 +228,80 @@
     </div>
 
     <script>
+        // ป้องกันการซูมด้วยการบีบนิ้วบนหน้าจอ
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+
+        /* ------------------ AUDIO ------------------ */
+        let clickSynth, undoSynth, finishSynth;
+        let audioInitialized = false;
+
+        function initAudio() {
+            if (audioInitialized) return;
+            try {
+                // Initialize Tone.js
+                Tone.start();
+
+                // Score click sound: a simple plucky sound
+                clickSynth = new Tone.Synth({
+                    oscillator: { type: "square" },
+                    envelope: {
+                        attack: 0.005,
+                        decay: 0.1,
+                        sustain: 0.05,
+                        release: 0.2
+                    }
+                }).toDestination();
+
+                // Undo sound: a low, falling pitch
+                undoSynth = new Tone.Synth({
+                    oscillator: { type: "sawtooth" },
+                    envelope: {
+                        attack: 0.01,
+                        decay: 0.2,
+                        sustain: 0.01,
+                        release: 0.3
+                    }
+                }).toDestination();
+
+                // Finish sound: a bright, two-note chord
+                finishSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "triangle" },
+                    envelope: {
+                        attack: 0.02,
+                        decay: 0.1,
+                        sustain: 0.1,
+                        release: 0.3
+                    }
+                }).toDestination();
+
+                audioInitialized = true;
+
+            } catch (e) {
+                console.error("Audio context initialization failed:", e);
+                audioInitialized = false;
+            }
+        }
+
+        function playScoreSound() {
+            if (audioInitialized) {
+                clickSynth.triggerAttackRelease("C5", "8n");
+            }
+        }
+
+        function playUndoSound() {
+            if (audioInitialized) {
+                undoSynth.triggerAttackRelease("C3", "4n");
+            }
+        }
+
+        function playFinishSound() {
+            if (audioInitialized) {
+                finishSynth.triggerAttackRelease(["C5", "E5", "G5"], "4n");
+            }
+        }
+
         /* ------------------ TTS ------------------ */
         let ttsVoice = null;
         let ttsInitialized = false;
@@ -296,7 +372,7 @@
             try {
                 if (!ttsInitialized) initTTS();
                 const u = new SpeechSynthesisUtterance("Foul");
-                u.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                u.lang = (ttsVoice && ttsVoice.lang) ? u.lang : 'en-US';
                 if (ttsVoice) u.voice = ttsVoice;
                 speechSynthesis.cancel();
                 setTimeout(()=>speechSynthesis.speak(u), 60);
@@ -358,6 +434,7 @@
             player.prev = player.score;
             player.score += points * scoreSign;
             updateScoreDisplay(activePlayerId);
+            playScoreSound();
         }
 
         function resetAll() {
@@ -392,9 +469,11 @@
                 players[pid].score = last.prevScore;
                 players[pid].prev = last.prevPrev;
                 updateScoreDisplay(pid);
+                playUndoSound();
             } else if (last.type === "resetAll" || last.type === "finish") {
                 players = last.snapshot;
                 for (const id in players) updateScoreDisplay(id);
+                playUndoSound();
             }
         }
 
@@ -415,9 +494,11 @@
                 players[id].prev = 0;
                 updateScoreDisplay(id);
             }
+            playFinishSound();
         }
 
         window.onload = () => {
+            initAudio();
             initTTS();
             installTTSUnlock();
             setActivePlayer("playerA");
