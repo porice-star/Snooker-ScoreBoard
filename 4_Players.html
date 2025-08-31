@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Snooker Scoreboard</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
@@ -40,6 +40,8 @@
             align-items: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             overflow: hidden;
+            height: 98%;
+            cursor: pointer;
         }
 
         .player-name {
@@ -61,7 +63,6 @@
         }
 
         .player-score {
-            /* ปรับขนาดตัวอักษรของคะแนนผู้เล่นให้เล็กลง 2% */
             font-size: 24.5vmin;
             font-weight: bold;
             transition: font-size 0.3s ease;
@@ -69,6 +70,16 @@
 
         .player-score.three-digits {
             font-size: 20vmin;
+        }
+
+        /* ช่องคะแนนก่อนหน้า (Prev) */
+        .player-prev-score {
+            position: absolute;
+            bottom: 5px;
+            left: 10px;
+            font-size: calc(7.2vmin * 0.98);
+            color: red;
+            font-weight: bold;
         }
 
         .control-container {
@@ -85,7 +96,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        /* ปุ่มพื้นฐาน */
         .snooker-ball, .action-button, .sign-button {
             width: 60px;
             height: 60px;
@@ -105,13 +115,11 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.6);
         }
 
-        /* ผู้เล่นสีต่างกัน */
         #playerA { background-color: #024731; }
         #playerB { background-color: #1b3a6f; }
         #playerC { background-color: #5c2751; }
         #playerD { background-color: #7a3b00; }
 
-        /* ลูกสนุ้กเป็นลูกบอลกลมมีเงา */
         .snooker-ball {
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(0,0,0,0.6));
@@ -126,7 +134,6 @@
         .black { background: radial-gradient(circle at 30% 30%, #666666, #000000); color: white; }
         .gold { background: radial-gradient(circle at 30% 30%, #fff5b3, #b38f00); color: black; }
 
-        /* ปุ่มการทำงาน */
         .action-button.setzero {
             background: linear-gradient(to bottom, #ffcc66, #cc6600);
             border-radius: 15px;
@@ -134,7 +141,7 @@
         }
 
         .sign-button {
-            background: linear-gradient(to bottom, #cc0000, #660000);
+            background: linear-gradient(to bottom, #1e3c9a, #2a5bb2);
             color: white;
             font-size: 28px;
             border-radius: 15px;
@@ -156,10 +163,9 @@
             border-radius: 15px;
             width: 100px;
         }
-        
-        /* ปุ่ม Home ที่เพิ่มใหม่ */
+
         .action-button.home-button {
-            background-color: #FFD700; /* สีเหลืองทอง */
+            background-color: #FFD700;
             color: black;
             width: 60px;
             height: 60px;
@@ -174,31 +180,32 @@
 </head>
 <body>
     <div class="container">
-        <!-- Players -->
         <div class="player-container" id="playerA">
             <div class="player-name" contenteditable="true">PLAYER A</div>
             <div class="player-frame-score" contenteditable="true">0</div>
             <div class="player-score">0</div>
+            <div class="player-prev-score">0</div>
         </div>
         <div class="player-container" id="playerB">
             <div class="player-name" contenteditable="true">PLAYER B</div>
             <div class="player-frame-score" contenteditable="true">0</div>
             <div class="player-score">0</div>
+            <div class="player-prev-score">0</div>
         </div>
         <div class="player-container" id="playerC">
             <div class="player-name" contenteditable="true">PLAYER C</div>
             <div class="player-frame-score" contenteditable="true">0</div>
             <div class="player-score">0</div>
+            <div class="player-prev-score">0</div>
         </div>
         <div class="player-container" id="playerD">
             <div class="player-name" contenteditable="true">PLAYER D</div>
             <div class="player-frame-score" contenteditable="true">0</div>
             <div class="player-score">0</div>
+            <div class="player-prev-score">0</div>
         </div>
 
-        <!-- Controls -->
         <div class="control-container">
-            <!-- ปุ่ม Home ที่เพิ่มใหม่ -->
             <button class="action-button home-button" onclick="window.location.href='index.html';">🏡</button>
             <button class="action-button setzero" onclick="resetAll()">Set Zero</button>
 
@@ -212,22 +219,102 @@
             <button class="snooker-ball gold" onclick="addScore(10)">10</button>
 
             <button class="sign-button" id="signBtn" onclick="toggleSign()">-</button>
+
             <button class="action-button undo" onclick="undo()">Undo</button>
             <button class="action-button finish" onclick="finishFrame()">Finish</button>
         </div>
     </div>
 
     <script>
+        /* ------------------ TTS ------------------ */
+        let ttsVoice = null;
+        let ttsInitialized = false;
+
+        function chooseEnglishLikeVoice(voices) {
+            if (!voices || voices.length === 0) return null;
+            let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'));
+            if (!v) v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-gb'));
+            if (!v) v = voices.find(v => /english/i.test(v.name));
+            return v || voices[0];
+        }
+
+        function initTTS() {
+            if (!('speechSynthesis' in window)) return;
+            try {
+                const voices = speechSynthesis.getVoices();
+                if (voices && voices.length > 0) {
+                    ttsVoice = chooseEnglishLikeVoice(voices);
+                    const warm = new SpeechSynthesisUtterance(' ');
+                    warm.volume = 0;
+                    warm.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                    if (ttsVoice) warm.voice = ttsVoice;
+                    speechSynthesis.speak(warm);
+                    ttsInitialized = true;
+                } else {
+                    speechSynthesis.onvoiceschanged = () => {
+                        const vs = speechSynthesis.getVoices();
+                        ttsVoice = chooseEnglishLikeVoice(vs);
+                        const warm = new SpeechSynthesisUtterance(' ');
+                        warm.volume = 0;
+                        warm.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                        if (ttsVoice) warm.voice = ttsVoice;
+                        speechSynthesis.speak(warm);
+                        ttsInitialized = true;
+                    };
+                }
+            } catch (e) { ttsInitialized = false; }
+        }
+
+        function installTTSUnlock() {
+            function unlock() {
+                initTTS();
+                document.removeEventListener('pointerdown', unlock, {capture:true});
+                document.removeEventListener('keydown', unlock, {capture:true});
+            }
+            document.addEventListener('pointerdown', unlock, {once: true, capture:true});
+            document.addEventListener('keydown', unlock, {once: true, capture:true});
+        }
+
+        function speakPlayerName(playerId) {
+            if (!('speechSynthesis' in window)) return;
+            const nameEl = document.querySelector(`#${playerId} .player-name`);
+            if (!nameEl) return;
+            const text = nameEl.textContent.trim();
+            if (!text) return;
+            try {
+                if (!ttsInitialized) initTTS();
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                if (ttsVoice) u.voice = ttsVoice;
+                setTimeout(() => { try { speechSynthesis.speak(u); } catch (e) {} }, 60);
+            } catch (e) {}
+        }
+
+        function speakFoul() {
+            if (!('speechSynthesis' in window)) return;
+            try {
+                if (!ttsInitialized) initTTS();
+                const u = new SpeechSynthesisUtterance("Foul");
+                u.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                if (ttsVoice) u.voice = ttsVoice;
+                speechSynthesis.cancel();
+                setTimeout(()=>speechSynthesis.speak(u), 60);
+            } catch (e) {}
+        }
+
+        /* ------------------ DATA ------------------ */
         let players = {
-            playerA: { score: 0, frame: 0 },
-            playerB: { score: 0, frame: 0 },
-            playerC: { score: 0, frame: 0 },
-            playerD: { score: 0, frame: 0 }
+            playerA: { score: 0, frame: 0, prev: 0 },
+            playerB: { score: 0, frame: 0, prev: 0 },
+            playerC: { score: 0, frame: 0, prev: 0 },
+            playerD: { score: 0, frame: 0, prev: 0 }
         };
 
         let activePlayerId = "playerA";
         let scoreHistory = [];
         let scoreSign = 1;
+        let isMinusMode = false;
 
         function setActivePlayer(playerId) {
             activePlayerId = playerId;
@@ -235,73 +322,84 @@
                 p.style.borderColor = "#444";
             });
             document.getElementById(playerId).style.borderColor = "gold";
+
+            isMinusMode = false;
+            scoreSign = 1;
+            document.getElementById("signBtn").classList.remove('active');
+
+            speakPlayerName(playerId);
         }
 
         document.querySelectorAll('.player-container').forEach(p => {
             p.addEventListener('click', () => setActivePlayer(p.id));
         });
-        setActivePlayer("playerA");
 
         function updateScoreDisplay(playerId) {
             const player = players[playerId];
-            const scoreEl = document.querySelector(`#${playerId} .player-score`);
-            const frameEl = document.querySelector(`#${playerId} .player-frame-score`);
+            document.querySelector(`#${playerId} .player-score`).textContent = player.score;
+            document.querySelector(`#${playerId} .player-frame-score`).textContent = player.frame;
+            document.querySelector(`#${playerId} .player-prev-score`).textContent = player.prev;
 
-            scoreEl.textContent = player.score;
-            frameEl.textContent = player.frame;
-            
             if (Math.abs(player.score) >= 100) {
-                scoreEl.classList.add('three-digits');
+                document.querySelector(`#${playerId} .player-score`).classList.add('three-digits');
             } else {
-                scoreEl.classList.remove('three-digits');
+                document.querySelector(`#${playerId} .player-score`).classList.remove('three-digits');
             }
         }
 
         function addScore(points) {
-            const player = players[activePlayerId];
-            player.score += points * scoreSign;
+            let player = players[activePlayerId];
             scoreHistory.push({
                 type: "score",
                 playerId: activePlayerId,
-                points: points * scoreSign
+                prevScore: player.score,
+                prevPrev: player.prev
             });
+            player.prev = player.score;
+            player.score += points * scoreSign;
             updateScoreDisplay(activePlayerId);
         }
 
         function resetAll() {
-            let snapshot = JSON.parse(JSON.stringify(players));
+            const snapshot = JSON.parse(JSON.stringify(players));
             scoreHistory.push({ type: "resetAll", snapshot });
             for (const id in players) {
                 players[id].score = 0;
+                players[id].prev = 0;
                 updateScoreDisplay(id);
             }
         }
 
         function toggleSign() {
-            scoreSign *= -1;
-            document.getElementById("signBtn").classList.toggle("active", scoreSign === -1);
+            const signBtn = document.getElementById("signBtn");
+            if (isMinusMode) {
+                isMinusMode = false;
+                scoreSign = 1;
+                signBtn.classList.remove('active');
+            } else {
+                isMinusMode = true;
+                scoreSign = -1;
+                signBtn.classList.add('active');
+                speakFoul();
+            }
         }
 
         function undo() {
             const last = scoreHistory.pop();
             if (!last) return;
-
             if (last.type === "score") {
-                players[last.playerId].score -= last.points;
-                updateScoreDisplay(last.playerId);
-            }
-            else if (last.type === "resetAll") {
-                players = last.snapshot;
-                for (const id in players) updateScoreDisplay(id);
-            }
-            else if (last.type === "finish") {
+                const pid = last.playerId;
+                players[pid].score = last.prevScore;
+                players[pid].prev = last.prevPrev;
+                updateScoreDisplay(pid);
+            } else if (last.type === "resetAll" || last.type === "finish") {
                 players = last.snapshot;
                 for (const id in players) updateScoreDisplay(id);
             }
         }
 
         function finishFrame() {
-            let snapshot = JSON.parse(JSON.stringify(players));
+            const snapshot = JSON.parse(JSON.stringify(players));
             let winner = null;
             let high = -Infinity;
             for (const id in players) {
@@ -314,9 +412,17 @@
             scoreHistory.push({ type: "finish", snapshot });
             for (const id in players) {
                 players[id].score = 0;
+                players[id].prev = 0;
                 updateScoreDisplay(id);
             }
         }
+
+        window.onload = () => {
+            initTTS();
+            installTTSUnlock();
+            setActivePlayer("playerA");
+            for (const id in players) updateScoreDisplay(id);
+        };
     </script>
 </body>
 </html>
