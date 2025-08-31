@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- รองรับ iOS/iPadOS safe area และ dvh -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Snooker Scoreboard</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
@@ -12,7 +13,11 @@
             font-family: 'Share Tech Mono', monospace;
             background-color: #111;
             color: #fff;
+
+            /* ใช้ dvh + fallback */
             height: 100vh;
+            height: 100dvh;
+
             display: flex;
             justify-content: center;
             align-items: center;
@@ -26,6 +31,8 @@
             gap: 10px;
             width: 100%;
             height: 100%;
+            max-height: 100vh;
+            max-height: 100dvh;
             padding: 10px;
             box-sizing: border-box;
         }
@@ -40,7 +47,7 @@
             align-items: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             overflow: hidden;
-            height: 96%; /* Adjusted height */
+            height: 96%;
             cursor: pointer;
         }
 
@@ -72,7 +79,6 @@
             font-size: 20vmin;
         }
 
-        /* ช่องคะแนนก่อนหน้า (Prev) */
         .player-prev-score {
             position: absolute;
             bottom: 5px;
@@ -87,7 +93,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-wrap: nowrap; /* Forces buttons to stay in a single row */
+            flex-wrap: nowrap;
             gap: 12px;
             padding: 10px;
             background-color: #013220;
@@ -177,7 +183,6 @@
             padding: 0;
         }
     </style>
-    <!-- Tone.js library for audio generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 </head>
 <body>
@@ -228,10 +233,8 @@
     </div>
 
     <script>
-        // ป้องกันการซูมด้วยการบีบนิ้วบนหน้าจอ
-        document.addEventListener('gesturestart', function (e) {
-            e.preventDefault();
-        });
+        // ป้องกัน pinch-zoom
+        document.addEventListener('gesturestart', e => e.preventDefault());
 
         /* ------------------ AUDIO ------------------ */
         let clickSynth, undoSynth, finishSynth;
@@ -240,72 +243,55 @@
         function initAudio() {
             if (audioInitialized) return;
             try {
-                // Initialize Tone.js
                 Tone.start();
 
-                // Score click sound: a simple plucky sound
+                // เสียงคลิก (คะแนน)
                 clickSynth = new Tone.Synth({
                     oscillator: { type: "square" },
-                    envelope: {
-                        attack: 0.005,
-                        decay: 0.1,
-                        sustain: 0.05,
-                        release: 0.2
-                    }
+                    envelope: { attack: 0.001, decay: 0.1, sustain: 0.05, release: 0.15 }
                 }).toDestination();
 
-                // Undo sound: a low, falling pitch
+                // เสียง Undo
                 undoSynth = new Tone.Synth({
                     oscillator: { type: "sawtooth" },
-                    envelope: {
-                        attack: 0.01,
-                        decay: 0.2,
-                        sustain: 0.01,
-                        release: 0.3
-                    }
+                    envelope: { attack: 0.01, decay: 0.3, sustain: 0.05, release: 0.4 }
                 }).toDestination();
 
-                // Finish sound: a bright, two-note chord
+                // เสียง Finish
                 finishSynth = new Tone.PolySynth(Tone.Synth, {
                     oscillator: { type: "triangle" },
-                    envelope: {
-                        attack: 0.02,
-                        decay: 0.1,
-                        sustain: 0.1,
-                        release: 0.3
-                    }
+                    envelope: { attack: 0.02, decay: 0.15, sustain: 0.1, release: 0.4 }
                 }).toDestination();
 
                 audioInitialized = true;
-
             } catch (e) {
-                console.error("Audio context initialization failed:", e);
-                audioInitialized = false;
+                console.error("Audio init failed:", e);
             }
         }
 
         function playScoreSound() {
-            if (audioInitialized) {
-                clickSynth.triggerAttackRelease("C5", "8n");
-            }
+            if (audioInitialized) clickSynth.triggerAttackRelease("C6", "16n");
         }
-
         function playUndoSound() {
             if (audioInitialized) {
-                undoSynth.triggerAttackRelease("C3", "4n");
+                undoSynth.triggerAttackRelease("E3", "8n");
+                setTimeout(() => undoSynth.triggerAttackRelease("C3", "8n"), 120);
             }
         }
-
         function playFinishSound() {
             if (audioInitialized) {
                 finishSynth.triggerAttackRelease(["C5", "E5", "G5"], "4n");
+                setTimeout(() => finishSynth.triggerAttackRelease(["G4", "B4", "D5"], "4n"), 200);
             }
         }
+
+        // initAudio เมื่อแตะครั้งแรก
+        document.addEventListener("pointerdown", () => initAudio(), { once: true });
+        document.addEventListener("touchstart", () => initAudio(), { once: true });
 
         /* ------------------ TTS ------------------ */
         let ttsVoice = null;
         let ttsInitialized = false;
-
         function chooseEnglishLikeVoice(voices) {
             if (!voices || voices.length === 0) return null;
             let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'));
@@ -313,7 +299,6 @@
             if (!v) v = voices.find(v => /english/i.test(v.name));
             return v || voices[0];
         }
-
         function initTTS() {
             if (!('speechSynthesis' in window)) return;
             try {
@@ -340,7 +325,6 @@
                 }
             } catch (e) { ttsInitialized = false; }
         }
-
         function installTTSUnlock() {
             function unlock() {
                 initTTS();
@@ -350,7 +334,6 @@
             document.addEventListener('pointerdown', unlock, {once: true, capture:true});
             document.addEventListener('keydown', unlock, {once: true, capture:true});
         }
-
         function speakPlayerName(playerId) {
             if (!('speechSynthesis' in window)) return;
             const nameEl = document.querySelector(`#${playerId} .player-name`);
@@ -366,7 +349,6 @@
                 setTimeout(() => { try { speechSynthesis.speak(u); } catch (e) {} }, 60);
             } catch (e) {}
         }
-
         function speakFoul() {
             if (!('speechSynthesis' in window)) return;
             try {
@@ -386,7 +368,6 @@
             playerC: { score: 0, frame: 0, prev: 0 },
             playerD: { score: 0, frame: 0, prev: 0 }
         };
-
         let activePlayerId = "playerA";
         let scoreHistory = [];
         let scoreSign = 1;
@@ -398,11 +379,9 @@
                 p.style.borderColor = "#444";
             });
             document.getElementById(playerId).style.borderColor = "gold";
-
             isMinusMode = false;
             scoreSign = 1;
             document.getElementById("signBtn").classList.remove('active');
-
             speakPlayerName(playerId);
         }
 
@@ -415,7 +394,6 @@
             document.querySelector(`#${playerId} .player-score`).textContent = player.score;
             document.querySelector(`#${playerId} .player-frame-score`).textContent = player.frame;
             document.querySelector(`#${playerId} .player-prev-score`).textContent = player.prev;
-
             if (Math.abs(player.score) >= 100) {
                 document.querySelector(`#${playerId} .player-score`).classList.add('three-digits');
             } else {
@@ -425,12 +403,7 @@
 
         function addScore(points) {
             let player = players[activePlayerId];
-            scoreHistory.push({
-                type: "score",
-                playerId: activePlayerId,
-                prevScore: player.score,
-                prevPrev: player.prev
-            });
+            scoreHistory.push({ type: "score", playerId: activePlayerId, prevScore: player.score, prevPrev: player.prev });
             player.prev = player.score;
             player.score += points * scoreSign;
             updateScoreDisplay(activePlayerId);
@@ -498,7 +471,6 @@
         }
 
         window.onload = () => {
-            initAudio();
             initTTS();
             installTTSUnlock();
             setActivePlayer("playerA");
