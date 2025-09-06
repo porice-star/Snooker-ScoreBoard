@@ -352,6 +352,20 @@
             document.addEventListener('keydown', unlock, {once: true, capture:true});
         }
         
+        // ขานคะแนนที่ได้ (เช่น "Seven point")
+        function speakPointAdded(points) {
+            if (!('speechSynthesis' in window) || !ttsInitialized) return;
+            window.speechSynthesis.cancel();
+            const textToSpeak = `${points} point`;
+            const uPoint = new SpeechSynthesisUtterance(textToSpeak);
+            uPoint.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+            if (ttsVoice) uPoint.voice = ttsVoice;
+            try {
+                speechSynthesis.speak(uPoint);
+            } catch (e) { console.error("TTS points speak failed", e); }
+        }
+
+        // ขานคะแนนรวม
         function speakScore(points) {
             if (!('speechSynthesis' in window) || !ttsInitialized) return;
             window.speechSynthesis.cancel();
@@ -375,12 +389,24 @@
             } catch (e) { console.error("TTS foul speak failed", e); }
         }
 
+        function speakMinusPoint(points) {
+            if (!('speechSynthesis' in window) || !ttsInitialized) return;
+            window.speechSynthesis.cancel();
+            const textToSpeak = `Minus ${points}`;
+            const uMinusPoint = new SpeechSynthesisUtterance(textToSpeak);
+            uMinusPoint.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+            if (ttsVoice) uMinusPoint.voice = ttsVoice;
+            try {
+                speechSynthesis.speak(uMinusPoint);
+            } catch (e) { console.error("TTS speak minus point failed", e); }
+        }
+
         function speakWinner(winnerName) {
             if (!('speechSynthesis' in window) || !ttsInitialized) return;
             window.speechSynthesis.cancel();
             
             const uWinner = new SpeechSynthesisUtterance(`${winnerName} win a frame`);
-            uWinner.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+            uWinner.lang = (ttsVoice && ttsVoice.lang) ? uWinner.lang : 'en-US';
             if (ttsVoice) uWinner.voice = ttsVoice;
             try {
                 speechSynthesis.speak(uWinner);
@@ -458,8 +484,7 @@
             const playerName = nameEl.textContent.trim();
             if (playerName) {
                 const uPlayer = new SpeechSynthesisUtterance(playerName);
-                uPlayer.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
-                // FIX: Corrected variable assignment here.
+                uPlayer.lang = (ttsVoice && ttsVoice.lang) ? uPlayer.lang : 'en-US';
                 if (ttsVoice) uPlayer.voice = ttsVoice;
                 try {
                     speechSynthesis.speak(uPlayer);
@@ -500,13 +525,21 @@
             player.score += actualPoints;
             updateScoreDisplay(activePlayerId);
             
-            // พูดคะแนนที่เพิ่มเข้ามา
-            speakScore(actualPoints);
+            // ขานคะแนนที่ได้มาใหม่
+            if (scoreSign === 1) {
+                // ถ้าเป็นคะแนนบวกปกติ ให้ขานคะแนนที่เพิ่งได้ว่า "X point"
+                speakPointAdded(actualPoints);
+            } else if (scoreSign === -1) {
+                // ถ้าเป็นโหมด Foul (คะแนนลบ) ให้ขาน "Minus [คะแนน]"
+                speakMinusPoint(points);
+            }
             
-            // หน่วงเวลา 1100ms แล้วพูดคะแนนรวม
+            // หน่วงเวลา 1100ms แล้วพูดคะแนนรวมของผู้เล่น
             setTimeout(() => {
                 speakScore(player.score);
             }, 1100);
+
+            // **แก้ไข: ลบการรีเซ็ตโหมด Foul โดยอัตโนมัติออก**
         }
 
         function resetAll() {
@@ -522,14 +555,16 @@
         function toggleSign() {
             const signBtn = document.getElementById("signBtn");
             if (isMinusMode) {
+                // ถ้าอยู่ในโหมดลบ ให้กลับเป็นโหมดปกติ
                 isMinusMode = false;
                 scoreSign = 1;
                 signBtn.classList.remove('active');
             } else {
+                // ถ้าอยู่ในโหมดปกติ ให้เข้าสู่โหมดลบ
                 isMinusMode = true;
                 scoreSign = -1;
                 signBtn.classList.add('active');
-                speakFoul(); // ขาน Foul เมื่อเข้าสู่โหมดลบ
+                speakFoul(); // ขาน Foul ทันทีเมื่อเข้าสู่โหมดลบ
             }
         }
 
