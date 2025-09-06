@@ -251,14 +251,14 @@
             <button class="action-button home-button" onclick="window.location.href='index.html';">🏡</button>
             <button class="action-button setzero" onclick="resetAll()">Set Zero</button>
 
-            <button class="snooker-ball red" onclick="addScore(1, 'one point')">1</button>
-            <button class="snooker-ball yellow" onclick="addScore(2, 'two points')">2</button>
-            <button class="snooker-ball green" onclick="addScore(3, 'three points')">3</button>
-            <button class="snooker-ball brown" onclick="addScore(4, 'four points')">4</button>
-            <button class="snooker-ball blue" onclick="addScore(5, 'five points')">5</button>
-            <button class="snooker-ball pink" onclick="addScore(6, 'six points')">6</button>
-            <button class="snooker-ball black" onclick="addScore(7, 'seven points')">7</button>
-            <button class="snooker-ball gold" onclick="addScore(10, 'ten points')">10</button>
+            <button class="snooker-ball red" onclick="addScore(1)">1</button>
+            <button class="snooker-ball yellow" onclick="addScore(2)">2</button>
+            <button class="snooker-ball green" onclick="addScore(3)">3</button>
+            <button class="snooker-ball brown" onclick="addScore(4)">4</button>
+            <button class="snooker-ball blue" onclick="addScore(5)">5</button>
+            <button class="snooker-ball pink" onclick="addScore(6)">6</button>
+            <button class="snooker-ball black" onclick="addScore(7)">7</button>
+            <button class="snooker-ball gold" onclick="addScore(10)">10</button>
 
             <button class="sign-button" id="signBtn" onclick="toggleSign()">-</button>
 
@@ -272,7 +272,7 @@
         document.addEventListener('gesturestart', e => e.preventDefault());
 
         /* ------------------ AUDIO ------------------ */
-        let clickSynth, undoSynth, finishSynth;
+        let undoSynth;
         let audioInitialized = false;
 
         function initAudio() {
@@ -280,22 +280,10 @@
             try {
                 Tone.start();
 
-                // เสียงคลิก (คะแนน)
-                clickSynth = new Tone.Synth({
-                    oscillator: { type: "square" },
-                    envelope: { attack: 0.001, decay: 0.1, sustain: 0.05, release: 0.15 }
-                }).toDestination();
-
                 // เสียง Undo
                 undoSynth = new Tone.Synth({
                     oscillator: { type: "sawtooth" },
                     envelope: { attack: 0.01, decay: 0.3, sustain: 0.05, release: 0.4 }
-                }).toDestination();
-
-                // เสียง Finish
-                finishSynth = new Tone.PolySynth(Tone.Synth, {
-                    oscillator: { type: "triangle" },
-                    envelope: { attack: 0.02, decay: 0.15, sustain: 0.1, release: 0.4 }
                 }).toDestination();
 
                 audioInitialized = true;
@@ -304,16 +292,13 @@
             }
         }
 
-        function playScoreSound() {
-            if (audioInitialized) clickSynth.triggerAttackRelease("C6", "16n");
-        }
         function playUndoSound() {
             if (audioInitialized) {
                 undoSynth.triggerAttackRelease("E3", "8n");
                 setTimeout(() => undoSynth.triggerAttackRelease("C3", "8n"), 120);
             }
         }
-
+        
         // initAudio เมื่อแตะครั้งแรก
         document.addEventListener("pointerdown", () => initAudio(), { once: true });
         document.addEventListener("touchstart", () => initAudio(), { once: true });
@@ -321,16 +306,7 @@
         /* ------------------ TTS ------------------ */
         let ttsVoice = null;
         let ttsInitialized = false;
-        const scoreTexts = {
-            1: "one point",
-            2: "two points",
-            3: "three points",
-            4: "four points",
-            5: "five points",
-            6: "six points",
-            7: "seven points",
-            10: "ten points"
-        };
+
         function chooseEnglishLikeVoice(voices) {
             if (!voices || voices.length === 0) return null;
             let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'));
@@ -338,6 +314,7 @@
             if (!v) v = voices.find(v => /english/i.test(v.name));
             return v || voices[0];
         }
+
         function initTTS() {
             if (!('speechSynthesis' in window)) return;
             try {
@@ -364,6 +341,7 @@
                 }
             } catch (e) { ttsInitialized = false; }
         }
+
         function installTTSUnlock() {
             function unlock() {
                 initTTS();
@@ -373,29 +351,28 @@
             document.addEventListener('pointerdown', unlock, {once: true, capture:true});
             document.addEventListener('keydown', unlock, {once: true, capture:true});
         }
-        function speakScore(points, newTotal) {
+        
+        function speakScore(points) {
             if (!('speechSynthesis' in window) || !ttsInitialized) return;
             window.speechSynthesis.cancel();
-            
-            const scoreText = scoreTexts[Math.abs(points)] || (Math.abs(points) > 0 ? `${Math.abs(points)} points` : "zero points");
-            const finalScoreText = points < 0 ? `minus ${scoreText}` : scoreText;
-            
-            const uScore = new SpeechSynthesisUtterance(finalScoreText);
+            const textToSpeak = `${points}`;
+            const uScore = new SpeechSynthesisUtterance(textToSpeak);
             uScore.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
             if (ttsVoice) uScore.voice = ttsVoice;
-            
-            uScore.onend = () => {
-                const uTotal = new SpeechSynthesisUtterance(`${newTotal}`);
-                uTotal.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
-                if (ttsVoice) uTotal.voice = ttsVoice;
-                try {
-                    speechSynthesis.speak(uTotal);
-                } catch (e) { console.error("TTS total score speak failed", e); }
-            };
-            
             try {
                 speechSynthesis.speak(uScore);
             } catch (e) { console.error("TTS score speak failed", e); }
+        }
+
+        function speakFoul() {
+            if (!('speechSynthesis' in window) || !ttsInitialized) return;
+            window.speechSynthesis.cancel();
+            const uFoul = new SpeechSynthesisUtterance("Foul");
+            uFoul.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+            if (ttsVoice) uFoul.voice = ttsVoice;
+            try {
+                speechSynthesis.speak(uFoul);
+            } catch (e) { console.error("TTS foul speak failed", e); }
         }
 
         function speakWinner(winnerName) {
@@ -431,8 +408,7 @@
             'Background/image4.jpg'
         ];
         let currentBgIndex = -1;
-        let isImageLoaded = false;
-
+        
         // Function to preload an image
         function preloadImage(url) {
             return new Promise((resolve, reject) => {
@@ -444,7 +420,6 @@
         }
         
         async function changeBackground() {
-            // First, increment the index
             currentBgIndex++;
             if (currentBgIndex >= bgImages.length) {
                 currentBgIndex = -1; // Reset to solid background
@@ -453,7 +428,6 @@
             const bodyEl = document.body;
             
             if (currentBgIndex === -1) {
-                // Revert to original solid background
                 bodyEl.style.backgroundImage = 'none';
                 bodyEl.style.backgroundColor = '#111';
                 bodyEl.classList.remove('background-active');
@@ -465,7 +439,6 @@
                     bodyEl.classList.add('background-active');
                 } catch (error) {
                     console.error(error.message);
-                    // If image fails to load, try the next one
                     changeBackground();
                 }
             }
@@ -486,6 +459,7 @@
             if (playerName) {
                 const uPlayer = new SpeechSynthesisUtterance(playerName);
                 uPlayer.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                // FIX: Corrected variable assignment here.
                 if (ttsVoice) uPlayer.voice = ttsVoice;
                 try {
                     speechSynthesis.speak(uPlayer);
@@ -516,17 +490,18 @@
             }
         }
 
-        function addScore(points, scoreText) {
+        function addScore(points) {
             let player = players[activePlayerId];
             
             const actualPoints = points * scoreSign;
-            scoreHistory.push({ type: "score", playerId: activePlayerId, prevScore: player.score, prevPrev: player.prev });
+            scoreHistory.push({ type: "score", playerId: activePlayerId, pointsAdded: actualPoints, prevScore: player.score, prevPrev: player.prev });
             
             player.prev = player.score;
             player.score += actualPoints;
             updateScoreDisplay(activePlayerId);
             
-            speakScore(actualPoints, player.score);
+            // ขานคะแนนเสมอ ไม่ว่าจะเป็นบวกหรือลบ
+            speakScore(actualPoints);
         }
 
         function resetAll() {
@@ -549,12 +524,7 @@
                 isMinusMode = true;
                 scoreSign = -1;
                 signBtn.classList.add('active');
-                
-                const u = new SpeechSynthesisUtterance("minus mode");
-                u.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
-                if (ttsVoice) u.voice = ttsVoice;
-                speechSynthesis.cancel();
-                setTimeout(()=>speechSynthesis.speak(u), 60);
+                speakFoul(); // ขาน Foul เมื่อเข้าสู่โหมดลบ
             }
         }
 
@@ -576,12 +546,39 @@
 
         function finishFrame() {
             const snapshot = JSON.parse(JSON.stringify(players));
+
+            // ตรวจสอบว่าคะแนนทั้งหมดเป็น 0 หรือไม่
+            const allScoresAreZero = Object.values(players).every(p => p.score === 0);
+            if (allScoresAreZero) {
+                // หากคะแนนเป็น 0 ทั้งหมด จะไม่มีการดำเนินการใดๆ
+                return;
+            }
+
+            // หาผู้เล่นที่มีคะแนนสูงสุด
+            let maxScore = -Infinity;
+            const playerIds = Object.keys(players);
+            
+            for (const id of playerIds) {
+                if (players[id].score > maxScore) {
+                    maxScore = players[id].score;
+                }
+            }
+
+            // หากลุ่มผู้เล่นที่มีคะแนนสูงสุดเท่ากัน
+            const highestScorers = playerIds.filter(id => players[id].score === maxScore);
+
             let winner = null;
-            let high = -Infinity;
-            for (const id in players) {
-                if (players[id].score > high) {
-                    high = players[id].score;
-                    winner = id;
+            if (highestScorers.length === 1) {
+                // ถ้ามีคนเดียวก็เป็นผู้ชนะ
+                winner = highestScorers[0];
+            } else if (highestScorers.length > 1) {
+                // ถ้ามีหลายคน ต้องหาว่าใครทำคะแนนสูงสุดเป็นคนสุดท้าย
+                for (let i = scoreHistory.length - 1; i >= 0; i--) {
+                    const historyItem = scoreHistory[i];
+                    if (historyItem.type === "score" && highestScorers.includes(historyItem.playerId) && players[historyItem.playerId].score === maxScore) {
+                        winner = historyItem.playerId;
+                        break;
+                    }
                 }
             }
 
@@ -591,7 +588,8 @@
                 const winnerName = winnerNameEl.textContent.trim();
                 speakWinner(winnerName);
             }
-
+            
+            // Reset scores for the new frame
             scoreHistory.push({ type: "finish", snapshot });
             for (const id in players) {
                 players[id].score = 0;
