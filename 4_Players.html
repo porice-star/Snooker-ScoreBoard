@@ -22,6 +22,14 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        body.background-active {
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
 
         .container {
@@ -49,6 +57,7 @@
             overflow: hidden;
             height: 96%;
             cursor: pointer;
+            transition: background-color 0.5s ease;
         }
 
         .player-name {
@@ -77,6 +86,10 @@
 
         .player-score.three-digits {
             font-size: 20vmin;
+        }
+
+        .player-score.negative-score {
+            color: #ff4d4d;
         }
 
         .player-prev-score {
@@ -121,10 +134,17 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.6);
         }
 
+        /* Player Container Colors */
         #playerA { background-color: #024731; }
         #playerB { background-color: #1b3a6f; }
         #playerC { background-color: #5c2751; }
         #playerD { background-color: #7a3b00; }
+
+        /* Semi-transparent colors for players when background image is active */
+        body.background-active #playerA { background-color: rgba(2, 71, 49, 0.7); }
+        body.background-active #playerB { background-color: rgba(27, 58, 111, 0.7); }
+        body.background-active #playerC { background-color: rgba(92, 39, 81, 0.7); }
+        body.background-active #playerD { background-color: rgba(122, 59, 0, 0.7); }
 
         .snooker-ball {
             border-radius: 50%;
@@ -182,6 +202,20 @@
             align-items: center;
             padding: 0;
         }
+
+        .action-button.cg-button {
+            background: linear-gradient(to bottom, #7a7aff, #3c3c7a);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            font-weight: bold;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 </head>
@@ -213,17 +247,18 @@
         </div>
 
         <div class="control-container">
+            <button class="action-button cg-button" onclick="changeBackground()">CG</button>
             <button class="action-button home-button" onclick="window.location.href='index.html';">🏡</button>
             <button class="action-button setzero" onclick="resetAll()">Set Zero</button>
 
-            <button class="snooker-ball red" onclick="addScore(1)">1</button>
-            <button class="snooker-ball yellow" onclick="addScore(2)">2</button>
-            <button class="snooker-ball green" onclick="addScore(3)">3</button>
-            <button class="snooker-ball brown" onclick="addScore(4)">4</button>
-            <button class="snooker-ball blue" onclick="addScore(5)">5</button>
-            <button class="snooker-ball pink" onclick="addScore(6)">6</button>
-            <button class="snooker-ball black" onclick="addScore(7)">7</button>
-            <button class="snooker-ball gold" onclick="addScore(10)">10</button>
+            <button class="snooker-ball red" onclick="addScore(1, 'one point')">1</button>
+            <button class="snooker-ball yellow" onclick="addScore(2, 'two points')">2</button>
+            <button class="snooker-ball green" onclick="addScore(3, 'three points')">3</button>
+            <button class="snooker-ball brown" onclick="addScore(4, 'four points')">4</button>
+            <button class="snooker-ball blue" onclick="addScore(5, 'five points')">5</button>
+            <button class="snooker-ball pink" onclick="addScore(6, 'six points')">6</button>
+            <button class="snooker-ball black" onclick="addScore(7, 'seven points')">7</button>
+            <button class="snooker-ball gold" onclick="addScore(10, 'ten points')">10</button>
 
             <button class="sign-button" id="signBtn" onclick="toggleSign()">-</button>
 
@@ -278,12 +313,6 @@
                 setTimeout(() => undoSynth.triggerAttackRelease("C3", "8n"), 120);
             }
         }
-        function playFinishSound() {
-            if (audioInitialized) {
-                finishSynth.triggerAttackRelease(["C5", "E5", "G5"], "4n");
-                setTimeout(() => finishSynth.triggerAttackRelease(["G4", "B4", "D5"], "4n"), 200);
-            }
-        }
 
         // initAudio เมื่อแตะครั้งแรก
         document.addEventListener("pointerdown", () => initAudio(), { once: true });
@@ -292,6 +321,16 @@
         /* ------------------ TTS ------------------ */
         let ttsVoice = null;
         let ttsInitialized = false;
+        const scoreTexts = {
+            1: "one point",
+            2: "two points",
+            3: "three points",
+            4: "four points",
+            5: "five points",
+            6: "six points",
+            7: "seven points",
+            10: "ten points"
+        };
         function chooseEnglishLikeVoice(voices) {
             if (!voices || voices.length === 0) return null;
             let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'));
@@ -334,31 +373,41 @@
             document.addEventListener('pointerdown', unlock, {once: true, capture:true});
             document.addEventListener('keydown', unlock, {once: true, capture:true});
         }
-        function speakPlayerName(playerId) {
-            if (!('speechSynthesis' in window)) return;
-            const nameEl = document.querySelector(`#${playerId} .player-name`);
-            if (!nameEl) return;
-            const text = nameEl.textContent.trim();
-            if (!text) return;
+        function speakScore(points, newTotal) {
+            if (!('speechSynthesis' in window) || !ttsInitialized) return;
+            window.speechSynthesis.cancel();
+            
+            const scoreText = scoreTexts[Math.abs(points)] || (Math.abs(points) > 0 ? `${Math.abs(points)} points` : "zero points");
+            const finalScoreText = points < 0 ? `minus ${scoreText}` : scoreText;
+            
+            const uScore = new SpeechSynthesisUtterance(finalScoreText);
+            uScore.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+            if (ttsVoice) uScore.voice = ttsVoice;
+            
+            uScore.onend = () => {
+                const uTotal = new SpeechSynthesisUtterance(`${newTotal}`);
+                uTotal.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                if (ttsVoice) uTotal.voice = ttsVoice;
+                try {
+                    speechSynthesis.speak(uTotal);
+                } catch (e) { console.error("TTS total score speak failed", e); }
+            };
+            
             try {
-                if (!ttsInitialized) initTTS();
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
-                if (ttsVoice) u.voice = ttsVoice;
-                setTimeout(() => { try { speechSynthesis.speak(u); } catch (e) {} }, 60);
-            } catch (e) {}
+                speechSynthesis.speak(uScore);
+            } catch (e) { console.error("TTS score speak failed", e); }
         }
-        function speakFoul() {
-            if (!('speechSynthesis' in window)) return;
+
+        function speakWinner(winnerName) {
+            if (!('speechSynthesis' in window) || !ttsInitialized) return;
+            window.speechSynthesis.cancel();
+            
+            const uWinner = new SpeechSynthesisUtterance(`${winnerName} win a frame`);
+            uWinner.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+            if (ttsVoice) uWinner.voice = ttsVoice;
             try {
-                if (!ttsInitialized) initTTS();
-                const u = new SpeechSynthesisUtterance("Foul");
-                u.lang = (ttsVoice && ttsVoice.lang) ? u.lang : 'en-US';
-                if (ttsVoice) u.voice = ttsVoice;
-                speechSynthesis.cancel();
-                setTimeout(()=>speechSynthesis.speak(u), 60);
-            } catch (e) {}
+                speechSynthesis.speak(uWinner);
+            } catch (e) { console.error("TTS winner speak failed", e); }
         }
 
         /* ------------------ DATA ------------------ */
@@ -372,6 +421,38 @@
         let scoreHistory = [];
         let scoreSign = 1;
         let isMinusMode = false;
+        
+        // Background image data and state
+        const bgImages = [
+            // กรุณาเปลี่ยน YOUR_USERNAME และ YOUR_REPO_NAME เป็นชื่อผู้ใช้และชื่อ repository ของคุณเอง
+            // ตัวอย่าง: 'https://raw.githubusercontent.com/example_user/snooker-repo/main/Background/CothSS.jpg',
+            'https://raw.githubusercontent.com/YOUR_USERNAME_HERE/YOUR_REPO_NAME_HERE/main/Background/CothSS.jpg',
+            'https://raw.githubusercontent.com/YOUR_USERNAME_HERE/YOUR_REPO_NAME_HERE/main/Background/image1.jpg',
+            'https://raw.githubusercontent.com/YOUR_USERNAME_HERE/YOUR_REPO_NAME_HERE/main/Background/image2.jpg',
+            'https://raw.githubusercontent.com/YOUR_USERNAME_HERE/YOUR_REPO_NAME_HERE/main/Background/image3.jpg',
+            'https://raw.githubusercontent.com/YOUR_USERNAME_HERE/YOUR_REPO_NAME_HERE/main/Background/image4.jpg'
+        ];
+        let currentBgIndex = -1;
+
+        function changeBackground() {
+            currentBgIndex++;
+            if (currentBgIndex >= bgImages.length) {
+                currentBgIndex = -1; // Reset to solid background
+            }
+            
+            const bodyEl = document.body;
+            
+            if (currentBgIndex === -1) {
+                // Revert to original solid background
+                bodyEl.style.backgroundImage = 'none';
+                bodyEl.style.backgroundColor = '#111';
+                bodyEl.classList.remove('background-active');
+            } else {
+                // Set new background image
+                bodyEl.style.backgroundImage = `url('${bgImages[currentBgIndex]}')`;
+                bodyEl.classList.add('background-active');
+            }
+        }
 
         function setActivePlayer(playerId) {
             activePlayerId = playerId;
@@ -382,7 +463,17 @@
             isMinusMode = false;
             scoreSign = 1;
             document.getElementById("signBtn").classList.remove('active');
-            speakPlayerName(playerId);
+            
+            const nameEl = document.querySelector(`#${playerId} .player-name`);
+            const playerName = nameEl.textContent.trim();
+            if (playerName) {
+                const uPlayer = new SpeechSynthesisUtterance(playerName);
+                uPlayer.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                if (ttsVoice) uPlayer.voice = ttsVoice;
+                try {
+                    speechSynthesis.speak(uPlayer);
+                } catch (e) { console.error("TTS player name speak failed", e); }
+            }
         }
 
         document.querySelectorAll('.player-container').forEach(p => {
@@ -391,23 +482,34 @@
 
         function updateScoreDisplay(playerId) {
             const player = players[playerId];
-            document.querySelector(`#${playerId} .player-score`).textContent = player.score;
+            const scoreEl = document.querySelector(`#${playerId} .player-score`);
+            scoreEl.textContent = player.score;
             document.querySelector(`#${playerId} .player-frame-score`).textContent = player.frame;
             document.querySelector(`#${playerId} .player-prev-score`).textContent = player.prev;
             if (Math.abs(player.score) >= 100) {
-                document.querySelector(`#${playerId} .player-score`).classList.add('three-digits');
+                scoreEl.classList.add('three-digits');
             } else {
-                document.querySelector(`#${playerId} .player-score`).classList.remove('three-digits');
+                scoreEl.classList.remove('three-digits');
+            }
+
+            if (player.score < 0) {
+                scoreEl.classList.add('negative-score');
+            } else {
+                scoreEl.classList.remove('negative-score');
             }
         }
 
-        function addScore(points) {
+        function addScore(points, scoreText) {
             let player = players[activePlayerId];
+            
+            const actualPoints = points * scoreSign;
             scoreHistory.push({ type: "score", playerId: activePlayerId, prevScore: player.score, prevPrev: player.prev });
+            
             player.prev = player.score;
-            player.score += points * scoreSign;
+            player.score += actualPoints;
             updateScoreDisplay(activePlayerId);
-            playScoreSound();
+            
+            speakScore(actualPoints, player.score);
         }
 
         function resetAll() {
@@ -430,7 +532,12 @@
                 isMinusMode = true;
                 scoreSign = -1;
                 signBtn.classList.add('active');
-                speakFoul();
+                
+                const u = new SpeechSynthesisUtterance("minus mode");
+                u.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+                if (ttsVoice) u.voice = ttsVoice;
+                speechSynthesis.cancel();
+                setTimeout(()=>speechSynthesis.speak(u), 60);
             }
         }
 
@@ -460,14 +567,20 @@
                     winner = id;
                 }
             }
-            if (winner) players[winner].frame++;
+
+            if (winner) {
+                players[winner].frame++;
+                const winnerNameEl = document.querySelector(`#${winner} .player-name`);
+                const winnerName = winnerNameEl.textContent.trim();
+                speakWinner(winnerName);
+            }
+
             scoreHistory.push({ type: "finish", snapshot });
             for (const id in players) {
                 players[id].score = 0;
                 players[id].prev = 0;
                 updateScoreDisplay(id);
             }
-            playFinishSound();
         }
 
         window.onload = () => {
