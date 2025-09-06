@@ -500,8 +500,13 @@
             player.score += actualPoints;
             updateScoreDisplay(activePlayerId);
             
-            // ขานคะแนนเสมอ ไม่ว่าจะเป็นบวกหรือลบ
+            // พูดคะแนนที่เพิ่มเข้ามา
             speakScore(actualPoints);
+            
+            // หน่วงเวลา 1100ms แล้วพูดคะแนนรวม
+            setTimeout(() => {
+                speakScore(player.score);
+            }, 1100);
         }
 
         function resetAll() {
