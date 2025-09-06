@@ -421,7 +421,7 @@
         let scoreHistory = [];
         let scoreSign = 1;
         let isMinusMode = false;
-        
+
         // Background image data and state
         const bgImages = [
             'Background/CothSS.jpg',
@@ -431,8 +431,20 @@
             'Background/image4.jpg'
         ];
         let currentBgIndex = -1;
+        let isImageLoaded = false;
 
-        function changeBackground() {
+        // Function to preload an image
+        function preloadImage(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(url);
+                img.onerror = () => reject(new Error(`Failed to load image at ${url}`));
+                img.src = url;
+            });
+        }
+        
+        async function changeBackground() {
+            // First, increment the index
             currentBgIndex++;
             if (currentBgIndex >= bgImages.length) {
                 currentBgIndex = -1; // Reset to solid background
@@ -446,9 +458,16 @@
                 bodyEl.style.backgroundColor = '#111';
                 bodyEl.classList.remove('background-active');
             } else {
-                // Set new background image
-                bodyEl.style.backgroundImage = `url('${bgImages[currentBgIndex]}')`;
-                bodyEl.classList.add('background-active');
+                try {
+                    const imageUrl = bgImages[currentBgIndex];
+                    await preloadImage(imageUrl);
+                    bodyEl.style.backgroundImage = `url('${imageUrl}')`;
+                    bodyEl.classList.add('background-active');
+                } catch (error) {
+                    console.error(error.message);
+                    // If image fails to load, try the next one
+                    changeBackground();
+                }
             }
         }
 
