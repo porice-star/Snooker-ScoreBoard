@@ -27,6 +27,20 @@
             padding: 2.5vh 2.5vw;
             box-sizing: border-box;
             touch-action: manipulation;
+            transition: background-image 0.5s ease-in-out, background-color 0.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+        }
+
+        body.darken-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: -1;
         }
 
         /* Player containers - now using Flexbox for stable layout */
@@ -120,20 +134,7 @@
         .player-frame-score:active {
             transform: scale(0.95);
         }
-
-        .prev-score {
-            /* Adjust size to be 5% smaller than frame score */
-            font-size: calc(7.5vmin * 0.95); 
-            color: #FF0000; /* New color: red */
-            font-weight: bold;
-            position: absolute;
-            bottom: 5%;
-            left: 5%;
-            opacity: 0.9;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-            transition: opacity 0.3s ease;
-        }
-
+        
         .player-score-wrapper {
             display: flex;
             justify-content: center;
@@ -237,9 +238,11 @@
 
         .action-buttons-container {
             display: flex;
-            justify-content: space-around;
+            justify-content: flex-start; /* จัดให้ชิดซ้าย */
+            align-items: center; /* จัดให้อยู่กึ่งกลางในแนวตั้ง */
             width: 100%;
             margin-top: 15px;
+            /* ลบ gap เพื่อควบคุมระยะห่างด้วย margin แทน */
         }
         
         .sign-button-container {
@@ -263,6 +266,7 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
             position: relative;
             transform: translateY(0);
+            margin-right: 1.5vw; /* กำหนดระยะห่างเริ่มต้นสำหรับปุ่มทั้งหมด */
         }
         
         .action-button:hover {
@@ -331,7 +335,17 @@
             margin: 0 0.5vw;
             box-shadow: 0 5px 10px rgba(0,0,0,0.3);
         }
+
+        /* ปรับ margin-right ของปุ่ม Home ให้ลดลง 50% เพื่อให้ใกล้ปุ่ม CG */
+        #home-button {
+            margin-right: 0.75vw;
+        }
         
+        /* กำหนดให้ปุ่ม CG ไม่มี margin ด้านขวา เพื่อเป็นจุดหลัก */
+        #cg-button {
+            margin-right: 0;
+        }
+
         .home-button.home-text { color: white; }
         
         .home-button:hover {
@@ -514,7 +528,6 @@
             <div class="player-name editable-name" id="player-a-name" data-player-id="player-a">PLAYER A</div>
         </div>
         <div class="player-frame-score editable-score" id="player-a-frames">0</div>
-        <div class="prev-score" id="player-a-prev">0</div>
         <div class="player-score-wrapper">
             <div class="player-score" id="player-a-score">0</div>
         </div>
@@ -525,7 +538,6 @@
             <div class="player-name editable-name" id="player-b-name" data-player-id="player-b">PLAYER B</div>
         </div>
         <div class="player-frame-score editable-score" id="player-b-frames">0</div>
-        <div class="prev-score" id="player-b-prev">0</div>
         <div class="player-score-wrapper">
             <div class="player-score" id="player-b-score">0</div>
         </div>
@@ -536,7 +548,6 @@
             <div class="player-name editable-name" id="player-c-name" data-player-id="player-c">PLAYER C</div>
         </div>
         <div class="player-frame-score editable-score" id="player-c-frames">0</div>
-        <div class="prev-score" id="player-c-prev">0</div>
         <div class="player-score-wrapper">
             <div class="player-score" id="player-c-score">0</div>
         </div>
@@ -564,7 +575,8 @@
             <button class="action-button finish-button">Finish</button>
             <button class="action-button set-zero-button">Set Zero</button>
             <button class="action-button undo-button">Undo</button>
-            <button class="action-button home-button" onclick="window.location.href='index.html';">🏡</button>
+            <button class="action-button home-button" id="home-button" onclick="window.location.href='index.html';">🏡</button>
+            <button class="action-button home-button" id="cg-button">CG</button>
         </div>
     </div>
 
@@ -607,7 +619,17 @@
         let activePlayerId = 'player-a';
         let scoreHistory = [];
         let scoreSign = 1;
-        let targetElement = null; // Reference to the element being edited (score or name)
+        let targetElement = null;
+        let backgroundImages = [
+            'Background/CothSS.jp',
+            'Background/image1.jpg',
+            'Background/image2.jpg',
+            'Background/image3.jpg',
+            'Background/image4.jpg'
+        ];
+        let currentImageIndex = 0;
+        const body = document.body;
+        const cgButton = document.getElementById('cg-button');
         
         // Define speech synthesis object
         const synth = window.speechSynthesis;
@@ -704,7 +726,6 @@
 
         function handleScoreClick(score) {
             const scoreDisplay = document.getElementById(activePlayerId + '-score');
-            const prevScoreDisplay = document.getElementById(activePlayerId + '-prev');
             const playerName = document.getElementById(activePlayerId + '-name').textContent;
             
             const currentScore = parseInt(scoreDisplay.textContent);
@@ -717,7 +738,6 @@
                 const id = container.getAttribute('data-player-id');
                 snapshot[id] = {
                     score: parseInt(document.getElementById(id + '-score').textContent),
-                    prevScore: parseInt(document.getElementById(id + '-prev').textContent),
                     frames: parseInt(document.getElementById(id + '-frames').textContent)
                 };
             });
@@ -733,7 +753,6 @@
             // Update the score display after a short delay
             setTimeout(() => {
                 updateScoreDisplay(scoreDisplay, newScore);
-                prevScoreDisplay.textContent = currentScore;
                 
                 // Speak the new total score after another delay
                 setTimeout(() => {
@@ -782,12 +801,10 @@
                 document.querySelectorAll('.player-container').forEach(container => {
                     const id = container.getAttribute('data-player-id');
                     const scoreEl = document.getElementById(id + '-score');
-                    const prevScoreEl = document.getElementById(id + '-prev');
                     const frameEl = document.getElementById(id + '-frames');
 
                     if (snapshot[id]) {
                         updateScoreDisplay(scoreEl, snapshot[id].score);
-                        prevScoreEl.textContent = snapshot[id].prevScore;
                         frameEl.textContent = snapshot[id].frames;
                     }
                 });
@@ -806,14 +823,12 @@
                 const id = container.getAttribute('data-player-id');
                 snapshot[id] = {
                     score: parseInt(document.getElementById(id + '-score').textContent),
-                    prevScore: parseInt(document.getElementById(id + '-prev').textContent),
                     frames: parseInt(document.getElementById(id + '-frames').textContent)
                 };
             });
             scoreHistory.push({ type: 'setZero', snapshot });
             
             document.querySelectorAll('.player-score').forEach(el => updateScoreDisplay(el, 0));
-            document.querySelectorAll('.prev-score').forEach(el => el.textContent = '0');
             
             showMessage("All scores reset to zero.", 2000);
             resetScoreSign();
@@ -826,7 +841,6 @@
                 const id = container.getAttribute('data-player-id');
                 snapshot[id] = {
                     score: parseInt(document.getElementById(id + '-score').textContent),
-                    prevScore: parseInt(document.getElementById(id + '-prev').textContent),
                     frames: parseInt(document.getElementById(id + '-frames').textContent)
                 };
             });
@@ -871,7 +885,6 @@
             }
 
             document.querySelectorAll('.player-score').forEach(el => updateScoreDisplay(el, 0));
-            document.querySelectorAll('.prev-score').forEach(el => el.textContent = '0');
             resetScoreSign();
         };
         
@@ -1019,6 +1032,47 @@
                 messageBox.classList.remove('show');
             }, duration);
         }
+
+        function changeBackground() {
+            // Reset to green background if all images have been shown
+            if (currentImageIndex >= backgroundImages.length) {
+                body.style.backgroundImage = 'none';
+                body.style.backgroundColor = '#006400';
+                body.classList.remove('darken-background');
+                currentImageIndex = 0; // Reset index to loop again
+                return;
+            }
+
+            const imageUrl = backgroundImages[currentImageIndex];
+            const img = new Image();
+
+            img.onload = () => {
+                body.style.backgroundImage = `url(${imageUrl})`;
+                const needsDarkening = imageUrl.includes('image');
+                
+                if (needsDarkening) {
+                    body.classList.add('darken-background');
+                } else {
+                    body.classList.remove('darken-background');
+                }
+                
+                currentImageIndex++;
+            };
+            
+            img.onerror = () => {
+                console.error(`Failed to load image: ${imageUrl}`);
+                showMessage("Failed to load image. Trying the next one...", 3000);
+                
+                currentImageIndex++;
+                changeBackground();
+            };
+            
+            img.src = imageUrl;
+        }
+
+        cgButton.addEventListener('click', () => {
+            changeBackground();
+        });
     </script>
 </body>
 </html>
