@@ -85,6 +85,26 @@
             justify-content: center;
             align-items: center;
             text-decoration: none;
+            
+            /* Add radial gradient and shadows for a 3D sphere effect */
+            background-image: 
+                radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 10%, transparent 20%), 
+                radial-gradient(circle at 65% 65%, transparent 20%, rgba(0, 0, 0, 0.4) 90%);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.6); 
+            text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .cg-button svg, .home-button svg {
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5));
+        }
+
+        .home-button {
+            background-color: #A9A9A9; /* สีเทาเงินสำหรับปุ่ม Home */
+        }
+        
+        .cg-button {
+            background-color: #FFD700; /* สีทองสำหรับปุ่ม CG */
         }
         
         .cg-button:active, .home-button:active { /* Added .home-button to the selector */
@@ -285,7 +305,7 @@
             margin: 0 1vmin;
         }
         
-        /* Corrected styling for the snooker balls with 3D effect */
+        /* Corrected styling for the snooker balls with a more realistic 3D effect */
         .snooker-ball {
             width: 9vmin; 
             height: 9vmin; 
@@ -302,11 +322,14 @@
             /* Add aspect-ratio to ensure a perfect circle */
             aspect-ratio: 1 / 1;
             
-            /* Enhanced 3D effect */
-            box-shadow: 
-                0 0 10px rgba(255, 255, 255, 0.2), 
-                0 8px 15px rgba(0, 0, 0, 0.6), 
-                inset 0 0 15px rgba(0, 0, 0, 0.2); 
+            /* Use radial-gradient for a realistic 3D sphere effect */
+            background-color: transparent; /* Reset to be set by individual classes */
+            background-image: 
+                radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 10%, transparent 20%), 
+                radial-gradient(circle at 65% 65%, transparent 20%, rgba(0, 0, 0, 0.4) 90%);
+            
+            /* Main shadow to lift the ball */
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.6); 
             
             text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
             position: relative;
@@ -316,10 +339,7 @@
 
         .snooker-ball:active {
             transform: translateY(2px);
-            box-shadow: 
-                0 0 5px rgba(255, 255, 255, 0.1),
-                0 4px 8px rgba(0, 0, 0, 0.5),
-                inset 0 0 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
         }
 
         .action-buttons-container {
@@ -376,21 +396,27 @@
             background-color: #F44336;
         }
         
+        /* Updated ball colors to support the radial-gradient effect */
         .red { background-color: #FF0000; }
         .yellow { background-color: #FFFF00; color: black; }
         .green { background-color: #008000; }
-        .brown { background-color: #A52A2A; }
+        .brown { background-color: #5C4033; }
         .blue { background-color: #0000FF; }
         .pink { background-color: #FFC0CB; color: black; }
         .black { background-color: #000000; }
         
         .black-red-ball { 
-            background: linear-gradient(to top right, black 50%, red 50%);
-            color: white;
+            background-image: 
+                radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 10%, transparent 20%), 
+                radial-gradient(circle at 65% 65%, transparent 20%, rgba(0, 0, 0, 0.4) 90%),
+                linear-gradient(to top right, black 50%, red 50%); /* Base gradient */
         }
         
         .gold-ball { 
-            background-color: #FFD700;
+            background-image: 
+                radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 10%, transparent 20%), 
+                radial-gradient(circle at 65% 65%, transparent 20%, rgba(0, 0, 0, 0.4) 90%),
+                radial-gradient(circle, #FFD700 0%, #C0A000 100%); /* Gold gradient */
             color: black;
         }
         
@@ -780,20 +806,10 @@
         // "Set Zero" button handler
         document.querySelector('.set-zero-button').onclick = () => {
             playSetZeroSound(); // Play sound
-            
-            // Save current state before setting to zero
-            scoreHistory.push({ 
-                type: 'setZero', 
-                score1: parseInt(document.getElementById('player1-score').textContent),
-                score2: parseInt(document.getElementById('player2-score').textContent),
-                frames1: parseInt(document.getElementById('player1-frames').textContent),
-                frames2: parseInt(document.getElementById('player2-frames').textContent),
-                lastPlayer: lastPlayerToScore
-            });
-
             updateScoreDisplay(document.getElementById('player1-score'), 0);
             updateScoreDisplay(document.getElementById('player2-score'), 0);
             updateDiff();
+            scoreHistory = [];
             lastPlayerToScore = null; // Reset last player to score
             createButtons('player1');
             createButtons('player2');
@@ -810,29 +826,20 @@
                     updateScoreDisplay(document.getElementById('player2-score'), lastMove.score2);
                     document.getElementById('player1-frames').textContent = lastMove.frames1;
                     document.getElementById('player2-frames').textContent = lastMove.frames2;
-                } else if (lastMove.type === 'setZero') {
-                    // Revert from set zero state
-                    updateScoreDisplay(document.getElementById('player1-score'), lastMove.score1);
-                    updateScoreDisplay(document.getElementById('player2-score'), lastMove.score2);
-                    document.getElementById('player1-frames').textContent = lastMove.frames1;
-                    document.getElementById('player2-frames').textContent = lastMove.frames2;
-                    lastPlayerToScore = lastMove.lastPlayer;
                 } else {
                     updateScoreDisplay(document.getElementById(lastMove.player + '-score'), lastMove.oldScore);
                 }
                 
-                // Update lastPlayerToScore after undo (for non-setZero moves)
-                if (lastMove.type !== 'setZero') {
-                    if (scoreHistory.length > 0) {
-                        let prevMove = scoreHistory[scoreHistory.length - 1];
-                        while (prevMove && prevMove.type === 'finish' || prevMove.type === 'setZero') {
-                            // Skip 'finish' and 'setZero' entries to find the previous scoring move
-                            prevMove = scoreHistory[scoreHistory.length - 1 - (scoreHistory.length - scoreHistory.indexOf(prevMove))];
-                        }
-                        lastPlayerToScore = prevMove ? prevMove.player : null;
-                    } else {
-                        lastPlayerToScore = null;
+                // Update lastPlayerToScore after undo
+                if (scoreHistory.length > 0) {
+                    let prevMove = scoreHistory[scoreHistory.length - 1];
+                    while (prevMove && prevMove.type === 'finish') {
+                        // Skip 'finish' entries to find the previous scoring move
+                        prevMove = scoreHistory[scoreHistory.length - 1 - (scoreHistory.length - scoreHistory.indexOf(prevMove))];
                     }
+                    lastPlayerToScore = prevMove ? prevMove.player : null;
+                } else {
+                    lastPlayerToScore = null;
                 }
                 
                 updateDiff();
