@@ -205,6 +205,7 @@
             min-height: 7.35vmin;
         }
         
+        /* Updated Snooker Ball Styling for a more realistic look */
         .snooker-ball {
             width: 10vmin;
             height: 10vmin;
@@ -218,22 +219,70 @@
             font-weight: bold;
             cursor: pointer;
             aspect-ratio: 1 / 1;
-            box-shadow:
-                0 0 10px rgba(255, 255, 255, 0.2),
-                0 8px 15px rgba(0, 0, 0, 0.6),
-                inset 0 0 15px rgba(0, 0, 0, 0.2);
-            text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
             position: relative;
             transform: translateY(0);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            
+            /* Realistic 3D and floating effects */
+            box-shadow: 
+                0 0 15px rgba(255, 255, 255, 0.3), /* เรืองแสงรอบนอก */
+                inset 0 0 20px rgba(0, 0, 0, 0.4), /* เงาด้านในเพื่อเพิ่มความลึก */
+                0 15px 30px rgba(0, 0, 0, 0.6); /* เงาลอย */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
 
         .snooker-ball:active {
             transform: translateY(2px);
-            box-shadow:
+            box-shadow: 
                 0 0 5px rgba(255, 255, 255, 0.1),
-                0 4px 8px rgba(0, 0, 0, 0.5),
-                inset 0 0 10px rgba(0, 0, 0, 0.2);
+                inset 0 0 5px rgba(0, 0, 0, 0.2),
+                0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Solid colors for snooker balls with radial gradients for shine */
+        .snooker-ball.red { 
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 30% 30%, #FF6B6B 0%, #E53935 80%);
+            color: white;
+        }
+        .snooker-ball.yellow { 
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 30% 30%, #FFFF99 0%, #FDD835 80%);
+            color: black;
+        }
+        .snooker-ball.green { 
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 30% 30%, #90EE90 0%, #388E3C 80%);
+        }
+        .snooker-ball.brown { 
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 30% 30%, #D2B48C 0%, #795548 80%);
+        }
+        .snooker-ball.blue { 
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 30% 30%, #64B5F6 0%, #1976D2 80%);
+        }
+        .snooker-ball.pink { 
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 30% 30%, #FF69B4 0%, #C71585 80%);
+            color: black; 
+        }
+        .snooker-ball.black { 
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 30% 30%, #5C5C5C 0%, #212121 80%);
+        }
+        .snooker-ball.gold-ball { 
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 30% 30%, #FFD700 0%, #FFA500 80%);
+            color: black; 
         }
 
         .action-buttons-container {
@@ -1076,4 +1125,3 @@
     </script>
 </body>
 </html>
-
