@@ -908,59 +908,62 @@
         const homeButton = document.getElementById('home-button');
         const body = document.body;
         
-        // Define the list of background image paths with a relative path
+        // Define the list of background image paths
         const backgroundImages = [
-            'Background/CothSS.jpg',
-            'Background/image1.jpg',
-            'Background/image2.jpg',
-            'Background/image3.jpg',
-            'Background/image4.jpg'
+            'https://i.ibb.co/68v8z3v/CothSS.jpg',
+            'https://i.ibb.co/L96W8qF/image1.jpg',
+            'https://i.ibb.co/3R9v4pG/image2.jpg',
+            'https://i.ibb.co/y4p131v/image3.jpg',
+            'https://i.ibb.co/m0f64b4/image4.jpg'
         ];
         
         let currentImageIndex = 0;
+        let isDefaultBackground = true;
         
         function changeBackground() {
-            // If all images have been shown, reset to the default green background
-            if (currentImageIndex >= backgroundImages.length) {
-                body.style.backgroundImage = 'none';
-                body.classList.remove('background-image-mode');
-                body.classList.remove('darken-background');
-                body.classList.add('default-background');
-                currentImageIndex = 0; // Reset index for the next loop
-                showMessage("กลับสู่พื้นหลังเริ่มต้น.", 2000);
-                return;
-            }
-
-            const imageUrl = backgroundImages[currentImageIndex];
-            const img = new Image();
-            
-            img.onload = () => {
-                body.style.backgroundImage = `url('${imageUrl}')`;
+            if (isDefaultBackground) {
+                // Change from default green to the first image
+                body.style.backgroundImage = `url('${backgroundImages[0]}')`;
                 body.classList.remove('default-background');
                 body.classList.add('background-image-mode');
-                
-                // Check if a dark overlay is needed based on the file name
-                const needsDarkening = imageUrl.includes('image');
-                if (needsDarkening) {
-                    body.classList.add('darken-background');
-                } else {
-                    body.classList.remove('darken-background');
-                }
-                
-                currentImageIndex++; // Increment for the next image
+                body.classList.add('darken-background');
+                currentImageIndex = 1;
+                isDefaultBackground = false;
                 showMessage("เปลี่ยนพื้นหลังสำเร็จ!", 2000);
-            };
-            
-            img.onerror = () => {
-                console.error(`Failed to load image: ${imageUrl}`);
-                showMessage("โหลดรูปภาพไม่สำเร็จ... กำลังลองรูปถัดไป", 3000);
-                
-                // Try the next image if the current one fails to load
-                currentImageIndex++;
-                changeBackground();
-            };
-            
-            img.src = imageUrl;
+            } else {
+                if (currentImageIndex < backgroundImages.length) {
+                    // Change to the next image in the sequence
+                    const imageUrl = backgroundImages[currentImageIndex];
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                        body.style.backgroundImage = `url('${imageUrl}')`;
+                        body.classList.remove('default-background');
+                        body.classList.add('background-image-mode');
+                        body.classList.add('darken-background');
+                        currentImageIndex++;
+                        showMessage("เปลี่ยนพื้นหลังสำเร็จ!", 2000);
+                    };
+                    
+                    img.onerror = () => {
+                        console.error(`Failed to load image: ${imageUrl}`);
+                        showMessage("โหลดรูปภาพไม่สำเร็จ... กำลังลองรูปถัดไป", 3000);
+                        currentImageIndex++;
+                        changeBackground();
+                    };
+                    
+                    img.src = imageUrl;
+                } else {
+                    // Cycle back to the default green background
+                    body.style.backgroundImage = 'none';
+                    body.classList.remove('background-image-mode');
+                    body.classList.remove('darken-background');
+                    body.classList.add('default-background');
+                    currentImageIndex = 0;
+                    isDefaultBackground = true;
+                    showMessage("กลับสู่พื้นหลังเริ่มต้น.", 2000);
+                }
+            }
         }
 
         function showMessage(message, duration) {
