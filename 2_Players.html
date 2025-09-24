@@ -903,30 +903,30 @@
         createButtons('player1');
         createButtons('player2');
 
-        // --- Background Toggle Logic from 3_Players.html ---
+        // --- Background Toggle Logic (UPDATED) ---
         const cgButton = document.getElementById('cg-button');
         const homeButton = document.getElementById('home-button');
         const body = document.body;
         
-        // Define the list of background image URLs directly
+        // Define the list of background image paths with a relative path
         const backgroundImages = [
-            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/CothSS.jpg',
-            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image1.jpg',
-            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image2.jpg',
-            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image3.jpg',
-            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image4.jpg'
+            'Background/CothSS.jpg',
+            'Background/image1.jpg',
+            'Background/image2.jpg',
+            'Background/image3.jpg',
+            'Background/image4.jpg'
         ];
         
         let currentImageIndex = 0;
         
         function changeBackground() {
-            // Check if all images have been shown, and reset to default if so
+            // If all images have been shown, reset to the default green background
             if (currentImageIndex >= backgroundImages.length) {
                 body.style.backgroundImage = 'none';
                 body.classList.remove('background-image-mode');
                 body.classList.remove('darken-background');
                 body.classList.add('default-background');
-                currentImageIndex = 0; // Reset the index for the next loop
+                currentImageIndex = 0; // Reset index for the next loop
                 showMessage("กลับสู่พื้นหลังเริ่มต้น.", 2000);
                 return;
             }
@@ -939,7 +939,7 @@
                 body.classList.remove('default-background');
                 body.classList.add('background-image-mode');
                 
-                // Determine if a dark overlay is needed based on the file name
+                // Check if a dark overlay is needed based on the file name
                 const needsDarkening = imageUrl.includes('image');
                 if (needsDarkening) {
                     body.classList.add('darken-background');
