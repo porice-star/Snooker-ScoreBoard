@@ -920,50 +920,62 @@
         let currentImageIndex = 0;
         
         function changeBackground() {
+            // ตรวจสอบว่ามีรูปภาพในรายการหรือไม่
             if (backgroundImages.length === 0) {
                 console.error("No background images available.");
+                showMessage("ไม่พบรูปภาพพื้นหลัง.", 3000);
                 return;
             }
             
+            // โหลดรูปภาพถัดไปในรายการ
             const imageUrl = backgroundImages[currentImageIndex];
             const img = new Image();
             
             img.onload = () => {
-                // Apply the background image and related classes
+                // หากโหลดสำเร็จ ให้เปลี่ยนพื้นหลังและปรับคลาส
                 body.style.backgroundImage = `url('${imageUrl}')`;
                 body.classList.remove('default-background');
                 body.classList.add('background-image-mode');
                 
-                // Check if the current image needs dimming
+                // ตรวจสอบว่ารูปภาพปัจจุบันต้องทำให้มืดลงหรือไม่
                 const needsDarkening = imageUrl.includes('image');
-                
                 if (needsDarkening) {
                     body.classList.add('darken-background');
                 } else {
                     body.classList.remove('darken-background');
                 }
                 
+                // เลื่อนไปยังรูปภาพถัดไปในรายการ
                 currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+                showMessage("เปลี่ยนพื้นหลังสำเร็จ!", 2000);
             };
             
             img.onerror = () => {
                 console.error(`Failed to load image: ${imageUrl}`);
-                showMessage("Failed to load image. Trying the next one...", 3000);
+                showMessage("โหลดรูปภาพไม่สำเร็จ... กำลังลองรูปถัดไป", 3000);
                 
+                // เลื่อนไปยังรูปภาพถัดไป
                 currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
                 
-                // If we've looped through all images and none loaded, return to default
+                // หากวนจนครบทุกรูปแล้วยังโหลดไม่ได้ ให้กลับไปใช้พื้นหลังเริ่มต้น
                 if (currentImageIndex === 0) {
-                    body.style.backgroundImage = 'none';
-                    body.classList.remove('background-image-mode', 'darken-background');
-                    body.classList.add('default-background');
-                    showMessage("All images failed to load. Default background restored.", 3000);
+                    resetToDefaultBackground();
+                    showMessage("ไม่สามารถโหลดรูปภาพใดๆ ได้. กลับไปใช้พื้นหลังเริ่มต้น.", 3000);
                 } else {
+                    // ลองเปลี่ยนพื้นหลังอีกครั้ง
                     changeBackground();
                 }
             };
             
             img.src = imageUrl;
+        }
+
+        // ฟังก์ชันสำหรับรีเซ็ตพื้นหลังเป็นค่าเริ่มต้น
+        function resetToDefaultBackground() {
+            body.style.backgroundImage = 'none';
+            body.classList.remove('background-image-mode', 'darken-background');
+            body.classList.add('default-background');
+            currentImageIndex = 0; // รีเซ็ตตัวนับรูปภาพ
         }
 
         function showMessage(message, duration) {
@@ -975,15 +987,15 @@
             }, duration);
         }
 
+        // Event Listener สำหรับปุ่ม CG
         cgButton.addEventListener('click', () => {
             changeBackground();
         });
         
+        // Event Listener สำหรับปุ่ม Home
         homeButton.addEventListener('click', () => {
-             // Logic for the home button to reset to default background
-             body.style.backgroundImage = 'none';
-             body.classList.remove('background-image-mode', 'darken-background');
-             body.classList.add('default-background');
+             resetToDefaultBackground();
+             showMessage("กลับสู่พื้นหลังเริ่มต้น.", 2000);
         });
 
     </script>
