@@ -906,17 +906,14 @@
         const homeButton = document.getElementById('home-button');
         const body = document.body;
         
-        // Use correct file names from GitHub
+        // Define the list of background image URLs directly, as in 3_Players.html
         const backgroundImages = [
-            'CothSS.jpg',
-            'image1.jpg',
-            'image2.jpg',
-            'image3.jpg',
-            'image4.jpg'
+            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/CothSS.jpg',
+            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image1.jpg',
+            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image2.jpg',
+            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image3.jpg',
+            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image4.jpg'
         ];
-        
-        // Define the base URL for the GitHub repository
-        const githubBaseUrl = 'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/';
         
         let currentImageIndex = 0;
         
@@ -925,8 +922,8 @@
                 console.error("No background images available.");
                 return;
             }
-
-            const imageUrl = githubBaseUrl + backgroundImages[currentImageIndex];
+            
+            const imageUrl = backgroundImages[currentImageIndex];
             const img = new Image();
             
             img.onload = () => {
@@ -937,7 +934,7 @@
                 body.classList.add('background-image-mode');
                 
                 // Check if the current image needs dimming
-                const needsDarkening = backgroundImages[currentImageIndex].startsWith('image');
+                const needsDarkening = imageUrl.includes('image');
                 
                 if (needsDarkening) {
                     body.classList.add('darken-background');
