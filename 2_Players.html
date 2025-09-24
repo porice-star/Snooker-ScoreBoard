@@ -22,26 +22,28 @@
         }
         
         body {
-            background-color: #006400; /* Dark green for snooker table feel */
             color: white;
             font-family: 'Bebas Neue', sans-serif;
             display: flex;
             justify-content: space-between;
             align-items: center; 
-            padding: 2% 5%; /* Adjusted horizontal padding to give more space on the sides */
+            padding: 2% 5%;
             box-sizing: border-box;
             position: relative;
             touch-action: manipulation;
-            /* Added transition for a smooth background change */
-            transition: background-color 0.5s ease;
+            transition: background-image 0.5s ease, background-color 0.5s ease;
+            background-size: cover;
+            background-position: center;
         }
         
+        /* New CSS class for the default dark green background */
+        .default-background {
+            background-color: #006400;
+        }
+
         /* New CSS class for the background image mode */
-        body.background-image-mode {
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-color: transparent; /* Set to transparent to show the image */
+        .background-image-mode {
+            background-color: transparent;
         }
         
         /* New CSS pseudo-element to darken the background image without affecting UI */
@@ -445,7 +447,7 @@
         }
     </style>
 </head>
-<body>
+<body class="default-background">
     <div class="top-left-buttons">
         <button id="home-button" class="home-button">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="100%" height="100%">
@@ -906,7 +908,7 @@
         const homeButton = document.getElementById('home-button');
         const body = document.body;
         
-        // Define the list of background image URLs directly, as in 3_Players.html
+        // Define the list of background image URLs directly
         const backgroundImages = [
             'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/CothSS.jpg',
             'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image1.jpg',
@@ -927,10 +929,9 @@
             const img = new Image();
             
             img.onload = () => {
-                // Apply the background image
+                // Apply the background image and related classes
                 body.style.backgroundImage = `url('${imageUrl}')`;
-                
-                // Add the background-image-mode class to set the background
+                body.classList.remove('default-background');
                 body.classList.add('background-image-mode');
                 
                 // Check if the current image needs dimming
@@ -950,7 +951,16 @@
                 showMessage("Failed to load image. Trying the next one...", 3000);
                 
                 currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
-                changeBackground();
+                
+                // If we've looped through all images and none loaded, return to default
+                if (currentImageIndex === 0) {
+                    body.style.backgroundImage = 'none';
+                    body.classList.remove('background-image-mode', 'darken-background');
+                    body.classList.add('default-background');
+                    showMessage("All images failed to load. Default background restored.", 3000);
+                } else {
+                    changeBackground();
+                }
             };
             
             img.src = imageUrl;
@@ -970,8 +980,10 @@
         });
         
         homeButton.addEventListener('click', () => {
-             // Logic for the home button
-            window.location.href = 'index.html';
+             // Logic for the home button to reset to default background
+             body.style.backgroundImage = 'none';
+             body.classList.remove('background-image-mode', 'darken-background');
+             body.classList.add('default-background');
         });
 
     </script>
