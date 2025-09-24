@@ -903,7 +903,7 @@
         createButtons('player1');
         createButtons('player2');
 
-        // --- New Background Toggle Logic with brightness adjustment ---
+        // --- Background Toggle Logic from 3_Players.html ---
         const cgButton = document.getElementById('cg-button');
         const homeButton = document.getElementById('home-button');
         const body = document.body;
@@ -920,24 +920,26 @@
         let currentImageIndex = 0;
         
         function changeBackground() {
-            // ตรวจสอบว่ามีรูปภาพในรายการหรือไม่
-            if (backgroundImages.length === 0) {
-                console.error("No background images available.");
-                showMessage("ไม่พบรูปภาพพื้นหลัง.", 3000);
+            // Check if all images have been shown, and reset to default if so
+            if (currentImageIndex >= backgroundImages.length) {
+                body.style.backgroundImage = 'none';
+                body.classList.remove('background-image-mode');
+                body.classList.remove('darken-background');
+                body.classList.add('default-background');
+                currentImageIndex = 0; // Reset the index for the next loop
+                showMessage("กลับสู่พื้นหลังเริ่มต้น.", 2000);
                 return;
             }
-            
-            // โหลดรูปภาพถัดไปในรายการ
+
             const imageUrl = backgroundImages[currentImageIndex];
             const img = new Image();
             
             img.onload = () => {
-                // หากโหลดสำเร็จ ให้เปลี่ยนพื้นหลังและปรับคลาส
                 body.style.backgroundImage = `url('${imageUrl}')`;
                 body.classList.remove('default-background');
                 body.classList.add('background-image-mode');
                 
-                // ตรวจสอบว่ารูปภาพปัจจุบันต้องทำให้มืดลงหรือไม่
+                // Determine if a dark overlay is needed based on the file name
                 const needsDarkening = imageUrl.includes('image');
                 if (needsDarkening) {
                     body.classList.add('darken-background');
@@ -945,8 +947,7 @@
                     body.classList.remove('darken-background');
                 }
                 
-                // เลื่อนไปยังรูปภาพถัดไปในรายการ
-                currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+                currentImageIndex++; // Increment for the next image
                 showMessage("เปลี่ยนพื้นหลังสำเร็จ!", 2000);
             };
             
@@ -954,28 +955,12 @@
                 console.error(`Failed to load image: ${imageUrl}`);
                 showMessage("โหลดรูปภาพไม่สำเร็จ... กำลังลองรูปถัดไป", 3000);
                 
-                // เลื่อนไปยังรูปภาพถัดไป
-                currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
-                
-                // หากวนจนครบทุกรูปแล้วยังโหลดไม่ได้ ให้กลับไปใช้พื้นหลังเริ่มต้น
-                if (currentImageIndex === 0) {
-                    resetToDefaultBackground();
-                    showMessage("ไม่สามารถโหลดรูปภาพใดๆ ได้. กลับไปใช้พื้นหลังเริ่มต้น.", 3000);
-                } else {
-                    // ลองเปลี่ยนพื้นหลังอีกครั้ง
-                    changeBackground();
-                }
+                // Try the next image if the current one fails to load
+                currentImageIndex++;
+                changeBackground();
             };
             
             img.src = imageUrl;
-        }
-
-        // ฟังก์ชันสำหรับรีเซ็ตพื้นหลังเป็นค่าเริ่มต้น
-        function resetToDefaultBackground() {
-            body.style.backgroundImage = 'none';
-            body.classList.remove('background-image-mode', 'darken-background');
-            body.classList.add('default-background');
-            currentImageIndex = 0; // รีเซ็ตตัวนับรูปภาพ
         }
 
         function showMessage(message, duration) {
@@ -987,15 +972,15 @@
             }, duration);
         }
 
-        // Event Listener สำหรับปุ่ม CG
+        // Event Listener for CG button
         cgButton.addEventListener('click', () => {
             changeBackground();
         });
         
-        // Event Listener สำหรับปุ่ม Home
+        // Event Listener for Home button
         homeButton.addEventListener('click', () => {
-             resetToDefaultBackground();
-             showMessage("กลับสู่พื้นหลังเริ่มต้น.", 2000);
+             // Redirect to index.html
+            window.location.href = 'index.html';
         });
 
     </script>
