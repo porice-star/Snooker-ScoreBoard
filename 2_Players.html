@@ -907,42 +907,26 @@
         const cgButton = document.getElementById('cg-button');
         const homeButton = document.getElementById('home-button');
         const body = document.body;
-
-        // Define the list of background image paths
-        // **ใช้ชื่อไฟล์รูปภาพแทน URL**
+        
         const backgroundImages = [
-            'CothSS.jpg',
-            'image1.jpg',
-            'image2.jpg',
-            'image3.jpg',
-            'image4.jpg'
+            'Background/CothSS.jpg',
+            'Background/image1.jpg',
+            'Background/image2.jpg',
+            'Background/image3.jpg',
+            'Background/image4.jpg'
         ];
-
-        let currentImageIndex = -1; // -1 for default green background
+        let currentImageIndex = 0;
 
         function changeBackground() {
-            // Get the next index, cycling back to -1 for the default background
-            const nextIndex = (currentImageIndex + 1) % (backgroundImages.length + 1);
-            currentImageIndex = nextIndex;
-
-            if (currentImageIndex === -1) {
-                // Return to the default green background
-                body.style.backgroundImage = 'none';
-                body.classList.add('default-background');
-                body.classList.remove('background-image-mode');
-                body.classList.remove('darken-background');
-                showMessage("กลับสู่พื้นหลังเริ่มต้น", 2000);
-            } else {
-                // Try to load the next image
+            if (currentImageIndex < backgroundImages.length) {
+                // Display an image
                 const imageUrl = backgroundImages[currentImageIndex];
                 const img = new Image();
-                
                 img.onload = () => {
                     body.style.backgroundImage = `url('${imageUrl}')`;
                     body.classList.remove('default-background');
                     body.classList.add('background-image-mode');
-                    
-                    // Check if the image needs a darkening overlay
+    
                     const needsDarkening = imageUrl.includes('image');
                     if (needsDarkening) {
                         body.classList.add('darken-background');
@@ -952,20 +936,32 @@
                     
                     showMessage("เปลี่ยนพื้นหลังสำเร็จ", 2000);
                 };
-                
                 img.onerror = () => {
                     console.error(`Failed to load image: ${imageUrl}`);
-                    showMessage("โหลดรูปภาพไม่สำเร็จ...", 3000);
-                    
-                    // Skip to the next background on error without an infinite loop
-                    currentImageIndex = (currentImageIndex + 1) % (backgroundImages.length + 1);
-                    changeBackground();
+                    showMessage("โหลดรูปภาพไม่สำเร็จ... ข้ามไปยังรูปถัดไป", 3000);
                 };
-                
                 img.src = imageUrl;
+                currentImageIndex++;
+            } else {
+                // All images have been shown, return to default
+                body.style.backgroundImage = 'none';
+                body.classList.add('default-background');
+                body.classList.remove('background-image-mode');
+                body.classList.remove('darken-background');
+                currentImageIndex = 0;
+                showMessage("กลับสู่พื้นหลังเริ่มต้น", 2000);
             }
         }
+
+        // Event Listener for CG button
+        cgButton.addEventListener('click', changeBackground);
         
+        // Event Listener for Home button
+        homeButton.addEventListener('click', () => {
+             // Redirect to index.html
+            window.location.href = 'index.html';
+        });
+
         function showMessage(message, duration) {
             const messageBox = document.getElementById('message-box');
             messageBox.textContent = message;
@@ -974,17 +970,6 @@
                 messageBox.classList.remove('show');
             }, duration);
         }
-
-        // Event Listener for CG button
-        cgButton.addEventListener('click', () => {
-            changeBackground();
-        });
-        
-        // Event Listener for Home button
-        homeButton.addEventListener('click', () => {
-             // Redirect to index.html
-            window.location.href = 'index.html';
-        });
 
     </script>
 </body>
